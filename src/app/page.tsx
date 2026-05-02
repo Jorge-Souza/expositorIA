@@ -1,65 +1,98 @@
-import Image from "next/image";
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { Sparkles, Zap, ShieldCheck, TrendingUp } from "lucide-react"
 
-export default function Home() {
+export default function LandingPage() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="min-h-screen flex flex-col">
+      {/* Header */}
+      <header className="border-b border-border px-6 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center">
+            <span className="text-white text-sm font-bold">E</span>
+          </div>
+          <span className="text-lg font-bold">
+            expositor<span className="text-primary">IA</span>
+          </span>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+        <div className="flex items-center gap-3">
+          <Button asChild variant="ghost" size="sm">
+            <Link href="/login">Entrar</Link>
+          </Button>
+          <Button asChild variant="gradient" size="sm">
+            <Link href="/cadastro">Começar grátis</Link>
+          </Button>
+        </div>
+      </header>
+
+      {/* Hero */}
+      <main className="flex-1 flex flex-col items-center justify-center text-center px-6 py-24 gap-6">
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-sm text-primary font-medium mb-2">
+          <Sparkles className="h-3.5 w-3.5" />
+          Imagens profissionais em segundos
+        </div>
+
+        <h1 className="text-4xl sm:text-6xl font-bold max-w-3xl leading-tight">
+          Transforme suas fotos de produto em{" "}
+          <span className="bg-gradient-to-r from-purple-400 to-violet-400 bg-clip-text text-transparent">
+            imagens que vendem
+          </span>
+        </h1>
+
+        <p className="text-lg text-muted-foreground max-w-xl">
+          Faça upload da foto do seu produto e nossa IA gera até 9 variações profissionais
+          prontas para o TikTok Shop e e-commerce em menos de 30 segundos.
+        </p>
+
+        <div className="flex flex-col sm:flex-row gap-3 mt-2">
+          <Button asChild variant="gradient" size="xl">
+            <Link href="/cadastro">
+              <Sparkles className="h-4 w-4" />
+              Gerar imagens grátis
+            </Link>
+          </Button>
+          <Button asChild variant="outline" size="xl">
+            <Link href="/login">Já tenho conta</Link>
+          </Button>
+        </div>
+
+        <p className="text-sm text-muted-foreground">5 créditos grátis ao criar conta · sem cartão</p>
+
+        {/* Features */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-16 max-w-3xl w-full text-left">
+          {[
+            {
+              icon: Zap,
+              title: "Geração em 30 segundos",
+              desc: "Nossa IA processa sua foto e gera variações profissionais em instantes.",
+            },
+            {
+              icon: TrendingUp,
+              title: "Otimizado para TikTok Shop",
+              desc: "Estilos criados especialmente para converter nas plataformas de social commerce.",
+            },
+            {
+              icon: ShieldCheck,
+              title: "Créditos sem prazo",
+              desc: "Compre uma vez, use quando quiser. Seus créditos nunca expiram.",
+            },
+          ].map(({ icon: Icon, title, desc }) => (
+            <div key={title} className="flex flex-col gap-3 p-5 rounded-xl border border-border bg-card">
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Icon className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <p className="font-semibold">{title}</p>
+                <p className="text-sm text-muted-foreground mt-1">{desc}</p>
+              </div>
+            </div>
+          ))}
         </div>
       </main>
+
+      <footer className="border-t border-border px-6 py-4 text-center text-xs text-muted-foreground">
+        © 2025 expositorIA · Todos os direitos reservados
+      </footer>
     </div>
-  );
+  )
 }
