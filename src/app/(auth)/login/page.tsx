@@ -33,7 +33,8 @@ export default function LoginPage() {
       }
       router.push("/dashboard")
     } catch (err) {
-      toast.error("Erro de conexão. Tente novamente.")
+      const msg = err instanceof Error ? err.message : "Erro desconhecido"
+      toast.error("Erro de conexão: " + msg)
       setLoading(false)
     }
   }
