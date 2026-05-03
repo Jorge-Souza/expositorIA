@@ -1,123 +1,136 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextRequest } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { removeBackground } from "@imgly/background-removal-node"
-import sharp from "sharp"
+import { GoogleGenAI } from "@google/genai"
 import { CREDITOS_TABELA, type Qualidade, type QuantidadeImagens } from "@/lib/types"
 
-// Dimensões por formato (largura × altura)
-const FORMAT_DIMS: Record<string, [number, number]> = {
-  "1:1":  [1024, 1024],
-  "9:16": [576,  1024],
-  "4:5":  [820,  1024],
-  "3:4":  [768,  1024],
-  "16:9": [1024, 576],
-  "4:3":  [1024, 768],
-}
-
-// Inference steps por qualidade (afeta riqueza do fundo gerado por IA)
-const QUALITY_STEPS: Record<string, number> = {
-  "1K": 4,
-  "2K": 8,
-  "4K": 12,
-}
+export const maxDuration = 60
 
 const CENARIO_PROMPTS: Record<string, string> = {
   marmore:     "white Carrara marble surface, luxury minimal setup",
-  natureza:    "fresh flowers, green leaves, natural botanical setting, earth tones",
-  premium:     "dark premium studio, black velvet surface, high-end luxury",
+  natureza:    "fresh flowers, green leaves, natural botanical setting",
+  premium:     "dark premium studio, black velvet, high-end luxury",
   minimalista: "clean white minimal background, soft subtle shadow",
   colorido:    "vibrant colorful abstract backdrop, bold contrasting colors",
-  urbano:      "urban concrete texture, street style, modern city aesthetic",
+  urbano:      "urban concrete texture, street style, modern city",
 }
 
 const ILUMINACAO_PROMPTS: Record<string, string> = {
-  estudio_neutro: "neutral diffused studio lighting, even exposure",
+  estudio_neutro: "neutral diffused studio lighting",
   natural_suave:  "soft natural daylight, gentle window light",
-  dramatica:      "dramatic side lighting, strong contrast, deep shadows",
+  dramatica:      "dramatic side lighting, deep shadows",
   golden_hour:    "warm golden hour sunlight, cinematic glow",
 }
 
 const ANGULO_PROMPTS: Record<string, string> = {
-  flat_lay:    "flat lay overhead top-down view",
-  frontal:     "straight-on frontal angle",
-  "45_graus":  "45 degree diagonal angle",
+  flat_lay:    "flat lay top-down overhead view",
+  frontal:     "straight-on frontal view",
+  "45_graus":  "45-degree diagonal angle",
   perspectiva: "dynamic low-angle perspective",
 }
 
-const HF_ROUTER = "https://router.huggingface.co/hf-inference/models/black-forest-labs/FLUX.1-schnell"
+const FORMAT_RATIOS: Record<string, string> = {
+  "1:1":  "square 1:1 aspect ratio",
+  "9:16": "vertical 9:16 for TikTok/Stories",
+  "4:5":  "vertical 4:5 for Instagram feed",
+  "3:4":  "vertical 3:4 portrait",
+  "16:9": "horizontal 16:9 widescreen",
+  "4:3":  "horizontal 4:3 classic",
+}
 
 function buildPrompt(params: {
-  cenario?: string
-  iluminacao?: string
-  angulo?: string
-  observacoes?: string
+  estilo: string
+  cenario: string
+  iluminacao: string
+  angulo: string
+  formato: string
+  observacoes: string
   variacao: number
+  total: number
 }): string {
-  const parts = [
-    "professional product photography",
-    CENARIO_PROMPTS[params.cenario ?? "minimalista"],
-    ILUMINACAO_PROMPTS[params.iluminacao ?? "estudio_neutro"],
-    ANGULO_PROMPTS[params.angulo ?? "frontal"],
-    "high resolution, sharp focus, commercial photography",
-    `variation ${params.variacao}`,
-  ]
-  if (params.observacoes) parts.push(params.observacoes)
-  return parts.filter(Boolean).join(", ")
+  const angulo = ANGULO_PROMPTS[params.angulo] ?? "frontal view"
+  const formato = FORMAT_RATIOS[params.formato] ?? "square format"
+
+  if (params.estilo === "fundo_branco") {
+    return `Professional e-commerce product photography. Take this product and create a clean, high-quality white background product photo.
+- Pure white background, no gradients
+- Professional even studio lighting, soft shadows
+- ${angulo}
+- ${formato}
+- Product sharp, centered, and clearly visible
+- Ready for TikTok Shop and e-commerce listing
+${params.observacoes ? `Extra: ${params.observacoes}` : ""}
+Variation ${params.variacao} of ${params.total}.`
+  }
+
+  return `Professional e-commerce product photography. Take this product and create a stunning lifestyle scene photo for social commerce.
+
+Scene background: ${CENARIO_PROMPTS[params.cenario] ?? "minimal clean background"}
+Lighting: ${ILUMINACAO_PROMPTS[params.iluminacao] ?? "studio lighting"}
+Camera angle: ${angulo}
+Format: ${formato}
+
+Rules:
+- Keep the product EXACTLY as it appears — do not alter the product itself
+- Remove the original background, place the product naturally in the described scene
+- The product must be the main focus and clearly in focus
+- High-quality photorealistic commercial photograph
+- Ready for TikTok Shop
+${params.observacoes ? `Extra instructions: ${params.observacoes}` : ""}
+Variation ${params.variacao} of ${params.total} — make this one unique.`
 }
 
-async function gerarFundoFlux(
-  prompt: string,
-  hfToken: string,
-  width: number,
-  height: number,
-  steps: number,
-): Promise<Buffer | null> {
-  const res = await fetch(HF_ROUTER, {
-    method: "POST",
-    headers: { "Authorization": `Bearer ${hfToken}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      inputs: prompt,
-      parameters: { num_inference_steps: steps, guidance_scale: 0, width, height },
-    }),
-  })
-  if (!res.ok) return null
-  return Buffer.from(await res.arrayBuffer())
-}
+async function generateWithGemini(params: {
+  imageBuffer: Buffer
+  mimeType: string
+  prompt: string
+}): Promise<Buffer | null> {
+  const apiKey = process.env.GOOGLE_API_KEY || ""
+  if (!apiKey) return null
 
-async function gerarFundoBranco(width: number, height: number): Promise<Buffer> {
-  return sharp({ create: { width, height, channels: 3, background: { r: 255, g: 255, b: 255 } } })
-    .jpeg()
-    .toBuffer()
-}
+  const genai = new GoogleGenAI({ apiKey })
+  const imageBase64 = params.imageBuffer.toString("base64")
 
-async function compositar(produtoSemFundo: Buffer, fundo: Buffer): Promise<Buffer> {
-  const fundoImg = sharp(fundo)
-  const { width = 1024, height = 1024 } = await fundoImg.metadata()
+  try {
+    const response = await genai.models.generateContent({
+      model: "gemini-2.0-flash-preview-image-generation",
+      contents: [
+        {
+          role: "user",
+          parts: [
+            { text: params.prompt },
+            { inlineData: { mimeType: params.mimeType, data: imageBase64 } },
+          ],
+        },
+      ],
+      config: { responseModalities: ["IMAGE"] },
+    })
 
-  const produtoResized = await sharp(produtoSemFundo)
-    .resize(Math.round(width * 0.75), Math.round(height * 0.75), { fit: "inside" })
-    .toBuffer()
-
-  const { width: pw = 512, height: ph = 512 } = await sharp(produtoResized).metadata()
-  const left = Math.round((width - pw) / 2)
-  const top = Math.round((height - ph) * 0.45)
-
-  return sharp(fundo)
-    .composite([{ input: produtoResized, left, top, blend: "over" }])
-    .jpeg({ quality: 92 })
-    .toBuffer()
+    const parts = response.candidates?.[0]?.content?.parts ?? []
+    for (const part of parts) {
+      if (part.inlineData?.data) {
+        return Buffer.from(part.inlineData.data, "base64")
+      }
+    }
+    return null
+  } catch {
+    return null
+  }
 }
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: "Não autorizado" }, { status: 401 })
+  if (!user) {
+    return new Response(JSON.stringify({ error: "Não autorizado" }), {
+      status: 401, headers: { "Content-Type": "application/json" },
+    })
+  }
 
   const formData = await req.formData()
   const imagem      = formData.get("imagem") as File | null
   const estilo      = formData.get("estilo") as string
-  const tipoProduto = formData.get("tipoProduto") as string
+  const tipoProduto = (formData.get("tipoProduto") as string) || "outros"
   const formato     = (formData.get("formato") as string) || "1:1"
   const qualidade   = (formData.get("qualidade") as Qualidade) || "1K"
   const quantidade  = Number(formData.get("quantidade") ?? "3") as QuantidadeImagens
@@ -126,25 +139,27 @@ export async function POST(req: NextRequest) {
   const angulo      = (formData.get("angulo") as string) || "frontal"
   const observacoes = (formData.get("observacoes") as string) || ""
 
-  if (!imagem) return NextResponse.json({ error: "Imagem obrigatória" }, { status: 400 })
-  if (!["fundo_branco", "ambientada", "com_modelo"].includes(estilo))
-    return NextResponse.json({ error: "Estilo inválido" }, { status: 400 })
-  if (!["1K", "2K", "4K"].includes(qualidade))
-    return NextResponse.json({ error: "Qualidade inválida" }, { status: 400 })
-  if (![3, 5, 9].includes(quantidade))
-    return NextResponse.json({ error: "Quantidade inválida" }, { status: 400 })
-  if (!(formato in FORMAT_DIMS))
-    return NextResponse.json({ error: "Formato inválido" }, { status: 400 })
-
-  const creditosNecessarios = CREDITOS_TABELA[qualidade][quantidade]
-
-  const adminClient = createAdminClient()
-  const { data: profile } = await adminClient.from("profiles").select("credits").eq("id", user.id).single()
-  if (!profile || profile.credits < creditosNecessarios) {
-    return NextResponse.json({ error: "Créditos insuficientes" }, { status: 402 })
+  if (!imagem) {
+    return new Response(JSON.stringify({ error: "Imagem obrigatória" }), {
+      status: 400, headers: { "Content-Type": "application/json" },
+    })
+  }
+  if (![3, 5, 9].includes(quantidade)) {
+    return new Response(JSON.stringify({ error: "Quantidade inválida" }), {
+      status: 400, headers: { "Content-Type": "application/json" },
+    })
   }
 
-  // Upload da imagem original
+  const creditosNecessarios = CREDITOS_TABELA[qualidade][quantidade]
+  const adminClient = createAdminClient()
+
+  const { data: profile } = await adminClient.from("profiles").select("credits").eq("id", user.id).single()
+  if (!profile || profile.credits < creditosNecessarios) {
+    return new Response(JSON.stringify({ error: "Créditos insuficientes" }), {
+      status: 402, headers: { "Content-Type": "application/json" },
+    })
+  }
+
   const buffer = Buffer.from(await imagem.arrayBuffer())
   const ext = imagem.name.split(".").pop() ?? "jpg"
   const originalPath = `${user.id}/${Date.now()}.${ext}`
@@ -153,8 +168,11 @@ export async function POST(req: NextRequest) {
     .from("produtos")
     .upload(originalPath, buffer, { contentType: imagem.type, upsert: false })
 
-  if (uploadError)
-    return NextResponse.json({ error: "Erro no upload: " + uploadError.message }, { status: 500 })
+  if (uploadError) {
+    return new Response(JSON.stringify({ error: "Erro no upload: " + uploadError.message }), {
+      status: 500, headers: { "Content-Type": "application/json" },
+    })
+  }
 
   const { data: { publicUrl: imagemOriginalUrl } } = adminClient.storage.from("produtos").getPublicUrl(originalPath)
 
@@ -176,58 +194,68 @@ export async function POST(req: NextRequest) {
     .select()
     .single()
 
-  if (geracaoError || !geracao)
-    return NextResponse.json({ error: "Erro ao criar geração" }, { status: 500 })
+  if (geracaoError || !geracao) {
+    return new Response(JSON.stringify({ error: "Erro ao criar geração" }), {
+      status: 500, headers: { "Content-Type": "application/json" },
+    })
+  }
 
   await adminClient.from("profiles")
     .update({ credits: profile.credits - creditosNecessarios })
     .eq("id", user.id)
 
-  try {
-    // Remoção de fundo local via WASM (sem API externa)
-    const blob = new Blob([buffer], { type: imagem.type })
-    const semFundoBlob = await removeBackground(blob)
-    const semFundoBuffer = Buffer.from(await semFundoBlob.arrayBuffer())
+  // SSE streaming — imagens aparecem conforme geradas
+  const encoder = new TextEncoder()
+  const { readable, writable } = new TransformStream()
+  const writer = writable.getWriter()
 
-    const [fmtW, fmtH] = FORMAT_DIMS[formato] ?? [1024, 1024]
-    const steps = QUALITY_STEPS[qualidade] ?? 4
+  const send = async (data: object) => {
+    try { await writer.write(encoder.encode(`data: ${JSON.stringify(data)}\n\n`)) } catch {}
+  }
 
+  ;(async () => {
     const imagensGeradas: string[] = []
 
+    await send({ type: "inicio", geracaoId: geracao.id, total: quantidade })
+
     for (let i = 0; i < quantidade; i++) {
-      let fundoBuffer: Buffer
+      const prompt = buildPrompt({ estilo, cenario, iluminacao, angulo, formato, observacoes, variacao: i + 1, total: quantidade })
+      const imgBuffer = await generateWithGemini({ imageBuffer: buffer, mimeType: imagem.type, prompt })
 
-      if (estilo === "fundo_branco") {
-        fundoBuffer = await gerarFundoBranco(fmtW, fmtH)
+      if (imgBuffer) {
+        const geradaPath = `${user.id}/gerada_${geracao.id}_${i}.jpg`
+        const { error: saveErr } = await adminClient.storage
+          .from("produtos")
+          .upload(geradaPath, imgBuffer, { contentType: "image/jpeg", upsert: true })
+
+        if (!saveErr) {
+          const { data: { publicUrl } } = adminClient.storage.from("produtos").getPublicUrl(geradaPath)
+          imagensGeradas.push(publicUrl)
+          await send({ type: "imagem", url: publicUrl, index: i, total: quantidade })
+        }
       } else {
-        const prompt = buildPrompt({ cenario, iluminacao, angulo, observacoes, variacao: i + 1 })
-        const flux = await gerarFundoFlux(prompt, process.env.HF_TOKEN!, fmtW, fmtH, steps)
-        fundoBuffer = flux ?? await gerarFundoBranco(fmtW, fmtH)
-      }
-
-      const final = await compositar(semFundoBuffer, fundoBuffer)
-      const geradaPath = `${user.id}/gerada_${geracao.id}_${i}.jpg`
-
-      const { error: saveErr } = await adminClient.storage
-        .from("produtos")
-        .upload(geradaPath, final, { contentType: "image/jpeg", upsert: true })
-
-      if (!saveErr) {
-        const { data: { publicUrl } } = adminClient.storage.from("produtos").getPublicUrl(geradaPath)
-        imagensGeradas.push(publicUrl)
+        await send({ type: "erro_imagem", index: i })
       }
     }
 
+    const finalStatus = imagensGeradas.length > 0 ? "concluido" : "erro"
     await adminClient.from("geracoes")
-      .update({ imagens_geradas: imagensGeradas, status: "concluido" })
+      .update({ imagens_geradas: imagensGeradas, status: finalStatus })
       .eq("id", geracao.id)
 
-    return NextResponse.json({ ok: true, geracaoId: geracao.id })
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : "Erro na geração"
-    await adminClient.from("geracoes").update({ status: "erro", erro: msg }).eq("id", geracao.id)
-    // Estorna créditos em caso de erro
-    await adminClient.from("profiles").update({ credits: profile.credits }).eq("id", user.id)
-    return NextResponse.json({ error: msg }, { status: 500 })
-  }
+    if (imagensGeradas.length === 0) {
+      await adminClient.from("profiles").update({ credits: profile.credits }).eq("id", user.id)
+    }
+
+    await send({ type: "concluido", geracaoId: geracao.id, total: imagensGeradas.length })
+    try { await writer.close() } catch {}
+  })()
+
+  return new Response(readable, {
+    headers: {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache, no-transform",
+      "X-Accel-Buffering": "no",
+    },
+  })
 }

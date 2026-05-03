@@ -77,6 +77,9 @@ export default function GerarPage() {
   const [state, setState] = useState<GerarState>(INITIAL)
   const [loading, setLoading] = useState(false)
   const [dragging, setDragging] = useState(false)
+  const [gerandoImagens, setGerandoImagens] = useState<string[]>([])
+  const [gerandoTotal, setGerandoTotal] = useState(0)
+  const [geracaoId, setGeracaoId] = useState<string | null>(null)
 
   function set<K extends keyof GerarState>(key: K, value: GerarState[K]) {
     setState((s) => ({ ...s, [key]: value }))
@@ -99,6 +102,9 @@ export default function GerarPage() {
   async function handleGerar() {
     if (!state.imagem || !state.tipoProduto || !state.estilo) return
     setLoading(true)
+    setGerandoImagens([])
+    setGeracaoId(null)
+
     const form = new FormData()
     form.append("imagem", state.imagem)
     form.append("estilo", state.estilo)
@@ -113,16 +119,107 @@ export default function GerarPage() {
     form.append("observacoes", state.observacoes)
     if (state.referencia) form.append("referencia", state.referencia)
 
-    const res = await fetch("/api/gerar", { method: "POST", body: form })
-    const json = await res.json()
-    if (!res.ok) {
-      toast.error(json.error ?? "Erro ao gerar imagens")
+    try {
+      const res = await fetch("/api/gerar", { method: "POST", body: form })
+
+      if (!res.ok) {
+        const json = await res.json()
+        toast.error(json.error ?? "Erro ao gerar imagens")
+        setLoading(false)
+        return
+      }
+
+      // Lê o stream SSE — imagens aparecem conforme são geradas
+      const reader = res.body!.getReader()
+      const decoder = new TextDecoder()
+      let buf = ""
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        buf += decoder.decode(value, { stream: true })
+        const lines = buf.split("\n")
+        buf = lines.pop() ?? ""
+
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue
+          try {
+            const data = JSON.parse(line.slice(6))
+            if (data.type === "inicio") {
+              setGeracaoId(data.geracaoId)
+              setGerandoTotal(data.total)
+            } else if (data.type === "imagem") {
+              setGerandoImagens((prev) => [...prev, data.url])
+            } else if (data.type === "concluido") {
+              setLoading(false)
+              toast.success(`${data.total} imagem(ns) gerada(s) com sucesso!`)
+            }
+          } catch {}
+        }
+      }
+    } catch {
+      toast.error("Erro ao gerar imagens. Tente novamente.")
       setLoading(false)
-      return
     }
-    toast.success("Imagens geradas com sucesso!")
-    router.push("/historico")
   }
+
+  // tela de geração ao vivo
+  if (loading || gerandoImagens.length > 0) return (
+    <div className="space-y-6 pb-8">
+      <div className="text-center space-y-2">
+        <h1 className="text-2xl font-bold">
+          {loading ? "Gerando suas imagens..." : "Imagens geradas!"}
+        </h1>
+        <p className="text-muted-foreground text-sm">
+          {loading
+            ? `${gerandoImagens.length} de ${gerandoTotal || state.quantidade} imagem(ns) concluída(s)`
+            : `${gerandoImagens.length} imagem(ns) pronta(s)`}
+        </p>
+        {loading && (
+          <div className="w-full max-w-xs mx-auto bg-muted rounded-full h-1.5 overflow-hidden">
+            <div
+              className="bg-primary h-full transition-all duration-500"
+              style={{ width: `${(gerandoImagens.length / (gerandoTotal || state.quantidade)) * 100}%` }}
+            />
+          </div>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {/* Imagens já geradas */}
+        {gerandoImagens.map((url, i) => (
+          <div key={i} className="relative group rounded-2xl overflow-hidden border border-border">
+            <img src={url} alt={`Imagem ${i + 1}`} className="w-full aspect-square object-cover" />
+            <a
+              href={url}
+              download={`expositorIA_${i + 1}.jpg`}
+              className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-sm font-medium"
+            >
+              Baixar
+            </a>
+          </div>
+        ))}
+        {/* Placeholders para imagens ainda em geração */}
+        {loading && Array.from({ length: (gerandoTotal || state.quantidade) - gerandoImagens.length }).map((_, i) => (
+          <div key={`loading-${i}`} className="rounded-2xl border border-border bg-muted aspect-square flex flex-col items-center justify-center gap-2 text-muted-foreground">
+            <Loader2 className="h-6 w-6 animate-spin" />
+            <span className="text-xs">Gerando...</span>
+          </div>
+        ))}
+      </div>
+
+      {!loading && (
+        <div className="flex gap-3 justify-center">
+          <Button variant="outline" onClick={() => { setGerandoImagens([]); setGeracaoId(null); setStep(0); setState(INITIAL) }}>
+            Gerar novamente
+          </Button>
+          <Button variant="gradient" onClick={() => router.push("/historico")}>
+            Ver histórico
+          </Button>
+        </div>
+      )}
+    </div>
+  )
 
   // barra inferior fixa
   const BottomBar = () => (
