@@ -2,217 +2,527 @@
 
 import { useState, useCallback, useRef } from "react"
 import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { toast } from "sonner"
-import { Upload, Sparkles, Loader2, X, Check, ImageIcon } from "lucide-react"
+import {
+  Box, Users, Trees, ChevronLeft, ImageIcon, X,
+  Zap, Monitor, Sparkles, Check, Loader2, Coins,
+} from "lucide-react"
 import { cn } from "@/lib/utils"
-import { ESTILOS } from "@/lib/types"
+import { Button } from "@/components/ui/button"
+import {
+  CREDITOS_TABELA, TIPOS_PRODUTO, CENARIOS, ILUMINACOES, ANGULOS, FORMATOS,
+  type EstiloFoto, type TipoProduto, type TipoGeracao,
+  type FormatoFoto, type Qualidade, type QuantidadeImagens,
+  type Cenario, type Iluminacao, type AnguloCamera,
+} from "@/lib/types"
 
-const QUANTIDADES = [
-  { value: 3, label: "3 imagens", creditos: 3 },
-  { value: 5, label: "5 imagens", creditos: 5 },
-  { value: 9, label: "9 imagens", creditos: 9 },
+// ---------- tipos de estado ----------
+interface GerarState {
+  estilo: EstiloFoto | null
+  imagem: File | null
+  preview: string | null
+  tipoProduto: TipoProduto | null
+  tipoGeracao: TipoGeracao
+  formato: FormatoFoto
+  qualidade: Qualidade
+  quantidade: QuantidadeImagens
+  cenario: Cenario
+  iluminacao: Iluminacao
+  angulo: AnguloCamera
+  referencia: File | null
+  observacoes: string
+}
+
+const INITIAL: GerarState = {
+  estilo: null,
+  imagem: null,
+  preview: null,
+  tipoProduto: null,
+  tipoGeracao: "produto_unico",
+  formato: "1:1",
+  qualidade: "1K",
+  quantidade: 3,
+  cenario: "marmore",
+  iluminacao: "estudio_neutro",
+  angulo: "frontal",
+  referencia: null,
+  observacoes: "",
+}
+
+// ---------- helpers visuais ----------
+const ESTILOS_FOTO = [
+  { id: "fundo_branco" as EstiloFoto, icon: Box,   label: "Fundo branco",    desc: "Catálogo limpo e profissional" },
+  { id: "ambientada"   as EstiloFoto, icon: Trees,  label: "Foto ambientada", desc: "Produto em cena / lifestyle" },
+  { id: "com_modelo"   as EstiloFoto, icon: Users,  label: "Com modelo",      desc: "Produto vestido ou em uso", breve: true },
 ]
 
+const QUALIDADES = [
+  { id: "1K" as Qualidade, icon: Zap,      label: "Rápida (1K)",       desc: "Alto volume · geração veloz" },
+  { id: "2K" as Qualidade, icon: Monitor,  label: "Alta Qualidade (2K)",desc: "E-commerce e impressões" },
+  { id: "4K" as Qualidade, icon: Sparkles, label: "Ultra HD (4K)",     desc: "Catálogos premium" },
+]
+
+const QUANTIDADES: QuantidadeImagens[] = [3, 5, 9]
+
+function calcCreditos(q: Qualidade, n: QuantidadeImagens) {
+  return CREDITOS_TABELA[q][n]
+}
+
+// ---------- componente principal ----------
 export default function GerarPage() {
   const router = useRouter()
   const inputRef = useRef<HTMLInputElement>(null)
-  const [arquivo, setArquivo] = useState<File | null>(null)
-  const [preview, setPreview] = useState<string | null>(null)
-  const [estilo, setEstilo] = useState(ESTILOS[0].id)
-  const [quantidade, setQuantidade] = useState(3)
+  const refInputRef = useRef<HTMLInputElement>(null)
+  const [step, setStep] = useState(0)
+  const [state, setState] = useState<GerarState>(INITIAL)
   const [loading, setLoading] = useState(false)
   const [dragging, setDragging] = useState(false)
 
+  function set<K extends keyof GerarState>(key: K, value: GerarState[K]) {
+    setState((s) => ({ ...s, [key]: value }))
+  }
+
   function handleFile(file: File) {
-    if (!file.type.startsWith("image/")) {
-      toast.error("Selecione uma imagem (PNG, JPG, WEBP)")
-      return
-    }
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error("Imagem muito grande. Máximo 10MB")
-      return
-    }
-    setArquivo(file)
-    setPreview(URL.createObjectURL(file))
+    if (!file.type.startsWith("image/")) { toast.error("Selecione uma imagem"); return }
+    if (file.size > 10 * 1024 * 1024) { toast.error("Máximo 10MB"); return }
+    set("imagem", file)
+    set("preview", URL.createObjectURL(file))
   }
 
   const onDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    setDragging(false)
-    const file = e.dataTransfer.files[0]
-    if (file) handleFile(file)
+    e.preventDefault(); setDragging(false)
+    const f = e.dataTransfer.files[0]; if (f) handleFile(f)
   }, [])
 
-  async function handleGerar() {
-    if (!arquivo) { toast.error("Selecione uma imagem do produto"); return }
-    setLoading(true)
+  const creditos = calcCreditos(state.qualidade, state.quantidade)
 
+  async function handleGerar() {
+    if (!state.imagem || !state.tipoProduto || !state.estilo) return
+    setLoading(true)
     const form = new FormData()
-    form.append("imagem", arquivo)
-    form.append("estilo", estilo)
-    form.append("quantidade", String(quantidade))
+    form.append("imagem", state.imagem)
+    form.append("estilo", state.estilo)
+    form.append("tipoProduto", state.tipoProduto)
+    form.append("tipoGeracao", state.tipoGeracao)
+    form.append("formato", state.formato)
+    form.append("qualidade", state.qualidade)
+    form.append("quantidade", String(state.quantidade))
+    form.append("cenario", state.cenario)
+    form.append("iluminacao", state.iluminacao)
+    form.append("angulo", state.angulo)
+    form.append("observacoes", state.observacoes)
+    if (state.referencia) form.append("referencia", state.referencia)
 
     const res = await fetch("/api/gerar", { method: "POST", body: form })
     const json = await res.json()
-
     if (!res.ok) {
       toast.error(json.error ?? "Erro ao gerar imagens")
       setLoading(false)
       return
     }
-
     toast.success("Imagens geradas com sucesso!")
     router.push("/historico")
   }
 
-  const estiloSelecionado = ESTILOS.find((e) => e.id === estilo)
-  const creditosNecessarios = quantidade
-
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Gerar imagens</h1>
-        <p className="text-muted-foreground">Faça upload do produto e escolha o estilo</p>
+  // barra inferior fixa
+  const BottomBar = () => (
+    <div className="fixed bottom-0 left-60 right-0 border-t border-border bg-card/95 backdrop-blur px-6 py-3 flex items-center justify-between gap-4">
+      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+        {(["1K","2K","4K"] as Qualidade[]).map((q) => (
+          <span key={q}>
+            {q}: <span className="text-foreground font-medium">{CREDITOS_TABELA[q][state.quantidade]} créditos</span>
+          </span>
+        ))}
       </div>
+      {step < 2 ? (
+        <Button
+          variant="gradient" size="lg"
+          disabled={
+            (step === 0 && !state.estilo) ||
+            (step === 1 && (!state.imagem || !state.tipoProduto))
+          }
+          onClick={() => setStep((s) => s + 1)}
+        >
+          Continuar
+        </Button>
+      ) : (
+        <Button
+          variant="gradient" size="lg"
+          disabled={loading || !state.imagem || !state.tipoProduto}
+          onClick={handleGerar}
+        >
+          {loading
+            ? <><Loader2 className="h-4 w-4 animate-spin" /> Gerando...</>
+            : <><Sparkles className="h-4 w-4" /> Gerar {state.quantidade} imagens · {creditos} créditos</>
+          }
+        </Button>
+      )}
+    </div>
+  )
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Upload */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Foto do produto</CardTitle>
-            <CardDescription>PNG, JPG ou WEBP · máximo 10MB</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {preview ? (
-              <div className="relative">
-                <img
-                  src={preview}
-                  alt="preview"
-                  className="w-full aspect-square object-contain rounded-lg border border-border bg-muted"
-                />
-                <button
-                  onClick={() => { setArquivo(null); setPreview(null) }}
-                  className="absolute top-2 right-2 w-7 h-7 rounded-full bg-background border border-border flex items-center justify-center hover:bg-destructive hover:border-destructive hover:text-white transition-colors"
-                >
-                  <X className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            ) : (
-              <div
-                onClick={() => inputRef.current?.click()}
-                onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
-                onDragLeave={() => setDragging(false)}
-                onDrop={onDrop}
-                className={cn(
-                  "w-full aspect-square rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-3 cursor-pointer transition-colors",
-                  dragging
+  // ---------- STEP 0 — estilo ----------
+  if (step === 0) return (
+    <div className="pb-20">
+      <div className="max-w-2xl mx-auto space-y-8">
+        <div className="text-center space-y-2">
+          <h1 className="text-3xl font-bold">Qual estilo de foto você deseja?</h1>
+          <p className="text-muted-foreground">Escolha o estilo ideal para seus produtos</p>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {ESTILOS_FOTO.map(({ id, icon: Icon, label, desc, breve }) => (
+            <button
+              key={id}
+              onClick={() => { if (!breve) { set("estilo", id); setStep(1) } }}
+              disabled={!!breve}
+              className={cn(
+                "relative flex flex-col items-center gap-4 p-8 rounded-2xl border-2 text-center transition-all",
+                breve
+                  ? "border-border opacity-50 cursor-not-allowed"
+                  : state.estilo === id
                     ? "border-primary bg-primary/5"
-                    : "border-border hover:border-primary/50 hover:bg-accent"
-                )}
-              >
-                <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center">
-                  <ImageIcon className="h-6 w-6 text-muted-foreground" />
-                </div>
-                <div className="text-center">
-                  <p className="text-sm font-medium">Arraste ou clique para fazer upload</p>
-                  <p className="text-xs text-muted-foreground mt-1">Foto clara do produto, de preferência fundo branco</p>
-                </div>
-                <input
-                  ref={inputRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f) }}
-                />
+                    : "border-border hover:border-primary/50 hover:bg-accent cursor-pointer"
+              )}
+            >
+              {breve && (
+                <span className="absolute top-3 right-3 text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full">
+                  Em breve
+                </span>
+              )}
+              <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center">
+                <Icon className="h-7 w-7 text-muted-foreground" />
               </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Configurações */}
-        <div className="space-y-4">
-          {/* Estilo */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Estilo das imagens</CardTitle>
-            </CardHeader>
-            <CardContent className="grid grid-cols-2 gap-2">
-              {ESTILOS.map((e) => (
-                <button
-                  key={e.id}
-                  onClick={() => setEstilo(e.id)}
-                  className={cn(
-                    "relative flex items-center gap-2 p-3 rounded-lg border text-sm font-medium transition-all text-left",
-                    estilo === e.id
-                      ? "border-primary bg-primary/10 text-primary"
-                      : "border-border hover:border-primary/40 hover:bg-accent text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  {estilo === e.id && (
-                    <Check className="h-3.5 w-3.5 shrink-0" />
-                  )}
-                  <span className={estilo === e.id ? "" : "ml-5"}>{e.label}</span>
-                </button>
-              ))}
-            </CardContent>
-          </Card>
-
-          {/* Quantidade */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Quantidade de variações</CardTitle>
-            </CardHeader>
-            <CardContent className="grid grid-cols-3 gap-2">
-              {QUANTIDADES.map((q) => (
-                <button
-                  key={q.value}
-                  onClick={() => setQuantidade(q.value)}
-                  className={cn(
-                    "flex flex-col items-center p-3 rounded-lg border transition-all",
-                    quantidade === q.value
-                      ? "border-primary bg-primary/10"
-                      : "border-border hover:border-primary/40 hover:bg-accent"
-                  )}
-                >
-                  <span className={cn("text-lg font-bold", quantidade === q.value ? "text-primary" : "text-foreground")}>
-                    {q.value}
-                  </span>
-                  <span className="text-xs text-muted-foreground">{q.creditos} créditos</span>
-                </button>
-              ))}
-            </CardContent>
-          </Card>
-
-          {/* Botão */}
-          <Button
-            onClick={handleGerar}
-            variant="gradient"
-            size="xl"
-            className="w-full"
-            disabled={loading || !arquivo}
-          >
-            {loading ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Gerando imagens...
-              </>
-            ) : (
-              <>
-                <Sparkles className="h-4 w-4" />
-                Gerar {quantidade} imagens · {creditosNecessarios} créditos
-              </>
-            )}
-          </Button>
-
-          {!arquivo && (
-            <p className="text-xs text-muted-foreground text-center">
-              Faça upload da foto do produto para continuar
-            </p>
-          )}
+              <div>
+                <p className="font-semibold text-base">{label}</p>
+                <p className="text-sm text-muted-foreground mt-1">{desc}</p>
+              </div>
+            </button>
+          ))}
         </div>
       </div>
+      <BottomBar />
+    </div>
+  )
+
+  // ---------- STEP 1 — upload + produto ----------
+  if (step === 1) return (
+    <div className="pb-20 space-y-6">
+      {/* header */}
+      <div className="flex items-center gap-3">
+        <button onClick={() => setStep(0)} className="text-muted-foreground hover:text-foreground transition-colors">
+          <ChevronLeft className="h-5 w-5" />
+        </button>
+        <div>
+          <h1 className="text-2xl font-bold">Envie a foto do produto</h1>
+          <p className="text-muted-foreground text-sm">Envie uma foto clara, bem iluminada</p>
+        </div>
+        <button
+          onClick={() => setStep(0)}
+          className="ml-auto flex items-center gap-1.5 text-sm border border-border rounded-lg px-3 py-1.5 hover:bg-accent transition-colors"
+        >
+          {ESTILOS_FOTO.find((e) => e.id === state.estilo)?.label}
+          <span className="text-muted-foreground text-xs">· Alterar</span>
+        </button>
+      </div>
+
+      {/* upload */}
+      {state.preview ? (
+        <div className="relative max-w-sm">
+          <img src={state.preview} alt="preview" className="w-full aspect-square object-contain rounded-2xl border border-border bg-muted" />
+          <button
+            onClick={() => { set("imagem", null); set("preview", null) }}
+            className="absolute top-3 right-3 w-8 h-8 rounded-full bg-background border border-border flex items-center justify-center hover:bg-destructive hover:border-destructive hover:text-white transition-colors"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      ) : (
+        <div
+          onClick={() => inputRef.current?.click()}
+          onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
+          onDragLeave={() => setDragging(false)}
+          onDrop={onDrop}
+          className={cn(
+            "w-full max-w-lg aspect-video rounded-2xl border-2 border-dashed flex flex-col items-center justify-center gap-4 cursor-pointer transition-colors",
+            dragging ? "border-primary bg-primary/5" : "border-border hover:border-primary/40 hover:bg-accent"
+          )}
+        >
+          <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center">
+            <ImageIcon className="h-7 w-7 text-muted-foreground" />
+          </div>
+          <div className="text-center">
+            <p className="font-medium">Arraste suas fotos aqui</p>
+            <p className="text-sm text-muted-foreground mt-1">ou clique para selecionar do seu dispositivo</p>
+          </div>
+          <p className="text-xs text-muted-foreground">📸 Foto clara e bem iluminada · 💡 Evite fotos escuras · PNG, JPG, WEBP · máx 10MB</p>
+          <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f) }} />
+        </div>
+      )}
+
+      {/* tipo de produto */}
+      <div className="space-y-3">
+        <h2 className="font-semibold">Qual tipo de produto é este?</h2>
+        <p className="text-sm text-muted-foreground">Selecione o tipo para gerar com mais precisão</p>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {TIPOS_PRODUTO.map(({ id, label, emoji }) => (
+            <button
+              key={id}
+              onClick={() => set("tipoProduto", id)}
+              className={cn(
+                "flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all text-sm font-medium",
+                state.tipoProduto === id
+                  ? "border-primary bg-primary/5 text-primary"
+                  : "border-border hover:border-primary/40 hover:bg-accent text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <span className="text-2xl">{emoji}</span>
+              <span className="text-center leading-tight">{label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* tipo de geração (só para ambientada) */}
+      {state.estilo === "ambientada" && (
+        <div className="space-y-3">
+          <h2 className="font-semibold">Tipo de geração</h2>
+          <div className="grid grid-cols-2 gap-3 max-w-md">
+            {[
+              { id: "produto_unico" as TipoGeracao, label: "Produto único", desc: "Um produto no cenário" },
+              { id: "conjunto"      as TipoGeracao, label: "Conjunto",      desc: "Vários produtos juntos" },
+            ].map(({ id, label, desc }) => (
+              <button
+                key={id}
+                onClick={() => set("tipoGeracao", id)}
+                className={cn(
+                  "flex flex-col gap-1 p-4 rounded-xl border-2 text-left transition-all",
+                  state.tipoGeracao === id ? "border-primary bg-primary/5" : "border-border hover:border-primary/40 hover:bg-accent"
+                )}
+              >
+                <span className="font-medium text-sm">{label}</span>
+                <span className="text-xs text-muted-foreground">{desc}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <BottomBar />
+    </div>
+  )
+
+  // ---------- STEP 2 — configurar ----------
+  return (
+    <div className="pb-24 space-y-8">
+      <div className="flex items-center gap-3">
+        <button onClick={() => setStep(1)} className="text-muted-foreground hover:text-foreground transition-colors">
+          <ChevronLeft className="h-5 w-5" />
+        </button>
+        <div>
+          <h1 className="text-2xl font-bold">Configure sua geração</h1>
+          <p className="text-sm text-muted-foreground">Formato, qualidade e cenário</p>
+        </div>
+      </div>
+
+      {/* formato */}
+      <div className="space-y-4">
+        <h2 className="font-semibold">Formato da foto</h2>
+        {["QUADRADO", "VERTICAL", "HORIZONTAL"].map((grupo) => {
+          const items = FORMATOS.filter((f) => f.grupo === grupo)
+          return (
+            <div key={grupo} className="space-y-2">
+              <p className="text-xs text-muted-foreground font-medium tracking-wider">{grupo}</p>
+              <div className="flex flex-wrap gap-2">
+                {items.map(({ id, label, desc }) => (
+                  <button
+                    key={id}
+                    onClick={() => set("formato", id)}
+                    className={cn(
+                      "flex flex-col p-3 rounded-xl border-2 text-left min-w-[130px] transition-all",
+                      state.formato === id ? "border-primary bg-primary/5" : "border-border hover:border-primary/40 hover:bg-accent"
+                    )}
+                  >
+                    <span className={cn("font-semibold text-sm", state.formato === id ? "text-primary" : "")}>{label}</span>
+                    <span className="text-xs text-muted-foreground mt-0.5">{desc}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* qualidade */}
+      <div className="space-y-3">
+        <div>
+          <h2 className="font-semibold">Qualidade da imagem</h2>
+          <p className="text-sm text-muted-foreground">Imagens em maior resolução consomem mais créditos</p>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {QUALIDADES.map(({ id, icon: Icon, label, desc }) => {
+            const custo = CREDITOS_TABELA[id][state.quantidade]
+            return (
+              <button
+                key={id}
+                onClick={() => set("qualidade", id)}
+                className={cn(
+                  "relative flex flex-col gap-2 p-4 rounded-xl border-2 text-left transition-all",
+                  state.qualidade === id ? "border-primary bg-primary/5" : "border-border hover:border-primary/40 hover:bg-accent"
+                )}
+              >
+                <div className="flex items-center justify-between">
+                  <Icon className={cn("h-5 w-5", state.qualidade === id ? "text-primary" : "text-muted-foreground")} />
+                  <span className="text-xs font-medium text-muted-foreground">{custo} créditos</span>
+                </div>
+                <span className={cn("font-semibold text-sm", state.qualidade === id ? "text-primary" : "")}>{label}</span>
+                <span className="text-xs text-muted-foreground">{desc}</span>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* quantidade */}
+      <div className="space-y-3">
+        <h2 className="font-semibold">Quantidade de variações</h2>
+        <div className="flex gap-3">
+          {QUANTIDADES.map((n) => (
+            <button
+              key={n}
+              onClick={() => set("quantidade", n)}
+              className={cn(
+                "flex flex-col items-center p-4 rounded-xl border-2 min-w-[90px] transition-all",
+                state.quantidade === n ? "border-primary bg-primary/5" : "border-border hover:border-primary/40 hover:bg-accent"
+              )}
+            >
+              <span className={cn("text-2xl font-bold", state.quantidade === n ? "text-primary" : "")}>{n}</span>
+              <span className="text-xs text-muted-foreground mt-1">{calcCreditos(state.qualidade, n)} créditos</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* cenário (só para ambientada) */}
+      {state.estilo === "ambientada" && (
+        <div className="space-y-5">
+          <h2 className="font-semibold">Opções de cenário</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            {/* cenário */}
+            <div className="space-y-2">
+              <label className="text-sm text-muted-foreground">Cenário</label>
+              <div className="flex flex-col gap-1.5">
+                {CENARIOS.map(({ id, label }) => (
+                  <button
+                    key={id}
+                    onClick={() => set("cenario", id)}
+                    className={cn(
+                      "flex items-center gap-2 px-3 py-2 rounded-lg border text-sm text-left transition-all",
+                      state.cenario === id ? "border-primary bg-primary/5 text-primary" : "border-border hover:bg-accent text-foreground"
+                    )}
+                  >
+                    {state.cenario === id && <Check className="h-3.5 w-3.5 shrink-0" />}
+                    <span className={state.cenario === id ? "" : "ml-5"}>{label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* iluminação */}
+            <div className="space-y-2">
+              <label className="text-sm text-muted-foreground">Iluminação</label>
+              <div className="flex flex-col gap-1.5">
+                {ILUMINACOES.map(({ id, label }) => (
+                  <button
+                    key={id}
+                    onClick={() => set("iluminacao", id)}
+                    className={cn(
+                      "flex items-center gap-2 px-3 py-2 rounded-lg border text-sm text-left transition-all",
+                      state.iluminacao === id ? "border-primary bg-primary/5 text-primary" : "border-border hover:bg-accent text-foreground"
+                    )}
+                  >
+                    {state.iluminacao === id && <Check className="h-3.5 w-3.5 shrink-0" />}
+                    <span className={state.iluminacao === id ? "" : "ml-5"}>{label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* ângulo */}
+            <div className="space-y-2">
+              <label className="text-sm text-muted-foreground">Ângulo de câmera</label>
+              <div className="flex flex-col gap-1.5">
+                {ANGULOS.map(({ id, label }) => (
+                  <button
+                    key={id}
+                    onClick={() => set("angulo", id)}
+                    className={cn(
+                      "flex items-center gap-2 px-3 py-2 rounded-lg border text-sm text-left transition-all",
+                      state.angulo === id ? "border-primary bg-primary/5 text-primary" : "border-border hover:bg-accent text-foreground"
+                    )}
+                  >
+                    {state.angulo === id && <Check className="h-3.5 w-3.5 shrink-0" />}
+                    <span className={state.angulo === id ? "" : "ml-5"}>{label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* foto de referência */}
+      <div className="space-y-3">
+        <div>
+          <h2 className="font-semibold flex items-center gap-2">
+            Foto de referência
+            <span className="text-xs text-muted-foreground font-normal">(opcional)</span>
+          </h2>
+          <p className="text-sm text-muted-foreground">Use para manter o mesmo padrão visual em todas as fotos do catálogo</p>
+        </div>
+        {state.referencia ? (
+          <div className="flex items-center gap-3 p-3 rounded-xl border border-border bg-muted/30">
+            <img
+              src={URL.createObjectURL(state.referencia)}
+              alt="referência"
+              className="w-12 h-12 rounded-lg object-cover border border-border"
+            />
+            <span className="text-sm flex-1 truncate">{state.referencia.name}</span>
+            <button onClick={() => set("referencia", null)} className="text-muted-foreground hover:text-foreground">
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => refInputRef.current?.click()}
+            className="flex items-center gap-3 p-4 rounded-xl border-2 border-dashed border-border hover:border-primary/40 hover:bg-accent transition-colors w-full max-w-sm"
+          >
+            <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
+              <ImageIcon className="h-5 w-5 text-muted-foreground" />
+            </div>
+            <span className="text-sm text-muted-foreground">+ Adicionar foto de referência</span>
+            <input ref={refInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) set("referencia", f) }} />
+          </button>
+        )}
+      </div>
+
+      {/* observações */}
+      <div className="space-y-2">
+        <h2 className="font-semibold flex items-center gap-2">
+          Observações
+          <span className="text-xs text-muted-foreground font-normal">(opcional)</span>
+        </h2>
+        <div className="relative">
+          <textarea
+            value={state.observacoes}
+            onChange={(e) => set("observacoes", e.target.value.slice(0, 500))}
+            placeholder="Ex: fundo bege suave · sombra mais leve · ângulo mais fechado"
+            rows={3}
+            className="w-full rounded-xl border border-border bg-input px-4 py-3 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-none"
+          />
+          <span className="absolute bottom-2 right-3 text-xs text-muted-foreground">{state.observacoes.length}/500</span>
+        </div>
+      </div>
+
+      <BottomBar />
     </div>
   )
 }
