@@ -150,9 +150,15 @@ export default function GerarPage() {
               setGerandoTotal(data.total)
             } else if (data.type === "imagem") {
               setGerandoImagens((prev) => [...prev, data.url])
+            } else if (data.type === "erro_imagem") {
+              toast.error(data.mensagem ?? "Erro ao gerar imagem")
             } else if (data.type === "concluido") {
               setLoading(false)
-              toast.success(`${data.total} imagem(ns) gerada(s) com sucesso!`)
+              if (data.total > 0) {
+                toast.success(`${data.total} imagem(ns) gerada(s) com sucesso!`)
+              } else {
+                toast.error("Nenhuma imagem foi gerada")
+              }
             }
           } catch {}
         }

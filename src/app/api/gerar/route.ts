@@ -117,8 +117,9 @@ async function generateWithGemini(params: {
       return Buffer.from(imgBytes, "base64")
     }
     return null
-  } catch {
-    return null
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    throw new Error(msg)
   }
 }
 
@@ -224,21 +225,28 @@ export async function POST(req: NextRequest) {
 
     for (let i = 0; i < quantidade; i++) {
       const prompt = buildPrompt({ estilo, cenario, iluminacao, angulo, formato, observacoes, variacao: i + 1, total: quantidade })
-      const imgBuffer = await generateWithGemini({ imageBuffer: buffer, mimeType: imagem.type, prompt, estilo })
+      try {
+        const imgBuffer = await generateWithGemini({ imageBuffer: buffer, mimeType: imagem.type, prompt, estilo })
 
-      if (imgBuffer) {
-        const geradaPath = `${user.id}/gerada_${geracao.id}_${i}.jpg`
-        const { error: saveErr } = await adminClient.storage
-          .from("produtos")
-          .upload(geradaPath, imgBuffer, { contentType: "image/jpeg", upsert: true })
+        if (imgBuffer) {
+          const geradaPath = `${user.id}/gerada_${geracao.id}_${i}.jpg`
+          const { error: saveErr } = await adminClient.storage
+            .from("produtos")
+            .upload(geradaPath, imgBuffer, { contentType: "image/jpeg", upsert: true })
 
-        if (!saveErr) {
-          const { data: { publicUrl } } = adminClient.storage.from("produtos").getPublicUrl(geradaPath)
-          imagensGeradas.push(publicUrl)
-          await send({ type: "imagem", url: publicUrl, index: i, total: quantidade })
+          if (!saveErr) {
+            const { data: { publicUrl } } = adminClient.storage.from("produtos").getPublicUrl(geradaPath)
+            imagensGeradas.push(publicUrl)
+            await send({ type: "imagem", url: publicUrl, index: i, total: quantidade })
+          } else {
+            await send({ type: "erro_imagem", index: i, mensagem: saveErr.message })
+          }
+        } else {
+          await send({ type: "erro_imagem", index: i, mensagem: "Imagem não retornada pela API" })
         }
-      } else {
-        await send({ type: "erro_imagem", index: i })
+      } catch (err) {
+        const mensagem = err instanceof Error ? err.message : String(err)
+        await send({ type: "erro_imagem", index: i, mensagem })
       }
     }
 
