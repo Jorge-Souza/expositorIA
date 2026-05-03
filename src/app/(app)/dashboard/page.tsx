@@ -16,8 +16,8 @@ function StatusBadge({ status }: { status: string }) {
 
 export default async function DashboardPage() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect("/login")
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  if (authError || !user) redirect("/login")
 
   const adminClient = createAdminClient()
   const [{ data: profile }, { data: geracoes }] = await Promise.all([

@@ -1,51 +1,37 @@
-import { createServerClient } from "@supabase/ssr"
 import { NextResponse, type NextRequest } from "next/server"
 
-export async function updateSession(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({ request })
+// Verifica presença do cookie de sessão do Supabase (sem chamada de rede)
+// A verificação real acontece nos Server Components via supabase.auth.getUser()
+function hasSession(request: NextRequest): boolean {
+  return request.cookies.getAll().some(
+    (c) => c.name.startsWith("sb-") && c.name.endsWith("-auth-token") && !!c.value
+  )
+}
 
-  let user = null
-  try {
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() { return request.cookies.getAll() },
-          setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
-            supabaseResponse = NextResponse.next({ request })
-            cookiesToSet.forEach(({ name, value, options }) =>
-              supabaseResponse.cookies.set(name, value, options)
-            )
-          },
-        },
-      }
-    )
-    const { data } = await supabase.auth.getUser()
-    user = data.user
-  } catch {
-    // Se Supabase falhar, trata como não autenticado
-  }
+export function updateSession(request: NextRequest) {
+  const isLoggedIn = hasSession(request)
 
-  const isAuthPage = request.nextUrl.pathname.startsWith("/login") ||
-    request.nextUrl.pathname.startsWith("/cadastro")
-  const isProtected = request.nextUrl.pathname.startsWith("/dashboard") ||
+  const isAuthPage =
+    request.nextUrl.pathname === "/login" ||
+    request.nextUrl.pathname === "/cadastro"
+
+  const isProtected =
+    request.nextUrl.pathname.startsWith("/dashboard") ||
     request.nextUrl.pathname.startsWith("/gerar") ||
     request.nextUrl.pathname.startsWith("/historico") ||
     request.nextUrl.pathname.startsWith("/creditos")
 
-  if (!user && isProtected) {
+  if (!isLoggedIn && isProtected) {
     const url = request.nextUrl.clone()
     url.pathname = "/login"
     return NextResponse.redirect(url)
   }
 
-  if (user && isAuthPage) {
+  if (isLoggedIn && isAuthPage) {
     const url = request.nextUrl.clone()
     url.pathname = "/dashboard"
     return NextResponse.redirect(url)
   }
 
-  return supabaseResponse
+  return NextResponse.next()
 }
