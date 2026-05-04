@@ -92,7 +92,7 @@ async function generateWithGemini(params: {
 
   try {
     const response = await genai.models.generateContent({
-      model: "gemini-2.0-flash-exp",
+      model: "gemini-2.5-flash-image",
       contents: [
         {
           role: "user",
