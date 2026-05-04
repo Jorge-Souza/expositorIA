@@ -287,25 +287,17 @@ export default function GerarPage() {
           <p className="text-muted-foreground">Escolha o estilo ideal para seus produtos</p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {ESTILOS_FOTO.map(({ id, icon: Icon, label, desc, breve }) => (
+          {ESTILOS_FOTO.map(({ id, icon: Icon, label, desc }) => (
             <button
               key={id}
-              onClick={() => { if (!breve) { set("estilo", id); setStep(1) } }}
-              disabled={!!breve}
+              onClick={() => { set("estilo", id); setStep(1) }}
               className={cn(
                 "relative flex flex-col items-center gap-4 p-8 rounded-2xl border-2 text-center transition-all",
-                breve
-                  ? "border-border opacity-50 cursor-not-allowed"
-                  : state.estilo === id
-                    ? "border-primary bg-primary/5"
-                    : "border-border hover:border-primary/50 hover:bg-accent cursor-pointer"
+                state.estilo === id
+                  ? "border-primary bg-primary/5"
+                  : "border-border hover:border-primary/50 hover:bg-accent cursor-pointer"
               )}
             >
-              {breve && (
-                <span className="absolute top-3 right-3 text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full">
-                  Em breve
-                </span>
-              )}
               <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center">
                 <Icon className="h-7 w-7 text-muted-foreground" />
               </div>
