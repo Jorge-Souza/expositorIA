@@ -1,5 +1,4 @@
 import { NextRequest } from "next/server"
-import { GoogleGenAI } from "@google/genai"
 
 const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY || "AIzaSyCES9K7ZVqJSU00SzaTzMukSzcS30oLBqM"
 
@@ -7,36 +6,28 @@ export const maxDuration = 60
 
 export async function GET(_req: NextRequest) {
   try {
-    const genai = new GoogleGenAI({ apiKey: GOOGLE_API_KEY })
+    const r = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models?key=${GOOGLE_API_KEY}&pageSize=100`
+    )
+    const data = await r.json()
 
-    // imagem 1x1 pixel branco em base64 (PNG)
-    const pixel = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwADhQGAWjR9awAAAABJRU5ErkJggg=="
-
-    const response = await genai.models.generateContent({
-      model: "gemini-2.0-flash-preview-image-generation",
-      contents: [
-        {
-          role: "user",
-          parts: [
-            { inlineData: { mimeType: "image/png", data: pixel } },
-            { text: "Transform this into a professional product photo on a clean white background." },
-          ],
-        },
-      ],
-      config: { responseModalities: ["TEXT", "IMAGE"] },
-    })
-
-    const parts = response.candidates?.[0]?.content?.parts ?? []
-    let temImagem = false
-    let tamanho = 0
-    for (const part of parts) {
-      if (part.inlineData?.data) {
-        temImagem = true
-        tamanho = part.inlineData.data.length
-      }
+    if (!r.ok) {
+      return Response.json({ ok: false, erro: data }, { status: r.status })
     }
 
-    return Response.json({ ok: true, temImagem, tamanho })
+    // Filtra só os modelos que suportam generateContent ou têm "image" no nome
+    const modelos = (data.models ?? [])
+      .filter((m: { name: string; supportedGenerationMethods?: string[] }) =>
+        m.name.includes("image") ||
+        m.name.includes("imagen") ||
+        (m.supportedGenerationMethods ?? []).includes("generateContent")
+      )
+      .map((m: { name: string; supportedGenerationMethods?: string[] }) => ({
+        nome: m.name,
+        metodos: m.supportedGenerationMethods,
+      }))
+
+    return Response.json({ ok: true, total: modelos.length, modelos })
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
     return Response.json({ ok: false, erro: msg }, { status: 500 })
