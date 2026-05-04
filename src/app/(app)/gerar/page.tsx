@@ -173,7 +173,7 @@ export default function GerarPage() {
   }
 
   // tela de geração ao vivo
-  if (loading || gerandoImagens.length > 0) return (
+  if (loading || gerandoImagens.length > 0 || gerandoErros.length > 0) return (
     <div className="space-y-6 pb-8">
       <div className="text-center space-y-2">
         <h1 className="text-2xl font-bold">
