@@ -55,7 +55,7 @@ const INITIAL: GerarState = {
 const ESTILOS_FOTO = [
   { id: "fundo_branco" as EstiloFoto, icon: Box,   label: "Fundo branco",    desc: "Catálogo limpo e profissional" },
   { id: "ambientada"   as EstiloFoto, icon: Trees,  label: "Foto ambientada", desc: "Produto em cena / lifestyle" },
-  { id: "com_modelo"   as EstiloFoto, icon: Users,  label: "Com modelo",      desc: "Produto vestido ou em uso", breve: true },
+  { id: "com_modelo"   as EstiloFoto, icon: Users,  label: "Com modelo",      desc: "Produto vestido ou em uso" },
 ]
 
 const QUALIDADES = [

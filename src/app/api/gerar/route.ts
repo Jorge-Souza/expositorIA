@@ -65,6 +65,19 @@ ${params.observacoes ? `Extra: ${params.observacoes}` : ""}
 Variation ${params.variacao} of ${params.total}.`
   }
 
+  if (params.estilo === "com_modelo") {
+    return `Professional fashion e-commerce photo. Show this product being worn or used by a model.
+- Place the product on a realistic human model appropriate for the product type
+- ${ILUMINACAO_PROMPTS[params.iluminacao] ?? "studio lighting"}
+- ${angulo}
+- ${formato}
+- The model should look natural and aspirational, like a real brand campaign
+- High-quality photorealistic commercial photograph
+- Ready for TikTok Shop and Instagram
+${params.observacoes ? `Extra instructions: ${params.observacoes}` : ""}
+Variation ${params.variacao} of ${params.total} — make this one unique.`
+  }
+
   return `Professional e-commerce product photography. Take this product and create a stunning lifestyle scene photo for social commerce.
 
 Scene background: ${CENARIO_PROMPTS[params.cenario] ?? "minimal clean background"}
