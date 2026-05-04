@@ -42,7 +42,7 @@ const INITIAL: GerarState = {
   tipoGeracao: "produto_unico",
   formato: "1:1",
   qualidade: "1K",
-  quantidade: 3,
+  quantidade: 1,
   cenario: "marmore",
   iluminacao: "estudio_neutro",
   angulo: "frontal",
@@ -64,7 +64,7 @@ const QUALIDADES = [
   { id: "4K" as Qualidade, icon: Sparkles, label: "Ultra HD (4K)",     desc: "Catálogos premium" },
 ]
 
-const QUANTIDADES: QuantidadeImagens[] = [3, 5, 9]
+const QUANTIDADES: QuantidadeImagens[] = [1, 3, 5]
 
 function calcCreditos(q: Qualidade, n: QuantidadeImagens) {
   return CREDITOS_TABELA[q][n]

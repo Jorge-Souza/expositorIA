@@ -71,16 +71,16 @@ export type TipoProduto = "moda" | "calcados" | "acessorios" | "beleza" | "eletr
 export type TipoGeracao = "produto_unico" | "conjunto"
 export type FormatoFoto = "1:1" | "9:16" | "4:5" | "3:4" | "16:9" | "4:3"
 export type Qualidade = "1K" | "2K" | "4K"
-export type QuantidadeImagens = 3 | 5 | 9
+export type QuantidadeImagens = 1 | 3 | 5
 export type Cenario = "marmore" | "natureza" | "premium" | "minimalista" | "colorido" | "urbano"
 export type Iluminacao = "estudio_neutro" | "natural_suave" | "dramatica" | "golden_hour"
 export type AnguloCamera = "flat_lay" | "frontal" | "45_graus" | "perspectiva"
 
 // Custo em créditos por qualidade × quantidade
 export const CREDITOS_TABELA: Record<Qualidade, Record<QuantidadeImagens, number>> = {
-  "1K": { 3: 3,  5: 5,  9: 9  },
-  "2K": { 3: 5,  5: 8,  9: 14 },
-  "4K": { 3: 9,  5: 14, 9: 24 },
+  "1K": { 1: 1,  3: 3,  5: 5  },
+  "2K": { 1: 2,  3: 5,  5: 8  },
+  "4K": { 1: 3,  3: 9,  5: 14 },
 }
 
 export const TIPOS_PRODUTO: { id: TipoProduto; label: string; emoji: string }[] = [

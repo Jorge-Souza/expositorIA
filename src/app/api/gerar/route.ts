@@ -159,7 +159,7 @@ export async function POST(req: NextRequest) {
       status: 400, headers: { "Content-Type": "application/json" },
     })
   }
-  if (![3, 5, 9].includes(quantidade)) {
+  if (![1, 3, 5].includes(quantidade)) {
     return new Response(JSON.stringify({ error: "Quantidade inválida" }), {
       status: 400, headers: { "Content-Type": "application/json" },
     })
