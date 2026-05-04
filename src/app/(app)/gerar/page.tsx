@@ -80,6 +80,7 @@ export default function GerarPage() {
   const [gerandoImagens, setGerandoImagens] = useState<string[]>([])
   const [gerandoTotal, setGerandoTotal] = useState(0)
   const [geracaoId, setGeracaoId] = useState<string | null>(null)
+  const [gerandoErros, setGerandoErros] = useState<string[]>([])
 
   function set<K extends keyof GerarState>(key: K, value: GerarState[K]) {
     setState((s) => ({ ...s, [key]: value }))
@@ -104,6 +105,7 @@ export default function GerarPage() {
     setLoading(true)
     setGerandoImagens([])
     setGeracaoId(null)
+    setGerandoErros([])
 
     const form = new FormData()
     form.append("imagem", state.imagem)
@@ -151,7 +153,8 @@ export default function GerarPage() {
             } else if (data.type === "imagem") {
               setGerandoImagens((prev) => [...prev, data.url])
             } else if (data.type === "erro_imagem") {
-              toast.error(data.mensagem ?? "Erro ao gerar imagem")
+              const msg = data.mensagem ?? "Erro ao gerar imagem"
+              setGerandoErros((prev) => [...prev, msg])
             } else if (data.type === "concluido") {
               setLoading(false)
               if (data.total > 0) {
@@ -214,9 +217,18 @@ export default function GerarPage() {
         ))}
       </div>
 
+      {gerandoErros.length > 0 && (
+        <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-4 space-y-1">
+          <p className="text-sm font-semibold text-destructive">Erros da API:</p>
+          {gerandoErros.map((e, i) => (
+            <p key={i} className="text-xs text-destructive/80 font-mono break-all">{e}</p>
+          ))}
+        </div>
+      )}
+
       {!loading && (
         <div className="flex gap-3 justify-center">
-          <Button variant="outline" onClick={() => { setGerandoImagens([]); setGeracaoId(null); setStep(0); setState(INITIAL) }}>
+          <Button variant="outline" onClick={() => { setGerandoImagens([]); setGerandoErros([]); setGeracaoId(null); setStep(0); setState(INITIAL) }}>
             Gerar novamente
           </Button>
           <Button variant="gradient" onClick={() => router.push("/historico")}>
