@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { GoogleGenAI, RawReferenceImage, EditMode } from "@google/genai"
+import { GoogleGenAI } from "@google/genai"
 import { CREDITOS_TABELA, type Qualidade, type QuantidadeImagens } from "@/lib/types"
 
 const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY || "AIzaSyCES9K7ZVqJSU00SzaTzMukSzcS30oLBqM"
@@ -86,35 +86,30 @@ async function generateWithGemini(params: {
   imageBuffer: Buffer
   mimeType: string
   prompt: string
-  estilo: string
 }): Promise<Buffer | null> {
   const genai = new GoogleGenAI({ apiKey: GOOGLE_API_KEY })
   const imageBase64 = params.imageBuffer.toString("base64")
 
   try {
-    const editMode = params.estilo === "fundo_branco"
-      ? EditMode.EDIT_MODE_PRODUCT_IMAGE
-      : EditMode.EDIT_MODE_BGSWAP
-
-    const response = await genai.models.editImage({
-      model: "imagen-3.0-capability-001",
-      prompt: params.prompt,
-      referenceImages: [
-        Object.assign(new RawReferenceImage(), {
-          referenceImage: { imageBytes: imageBase64 },
-          referenceId: 0,
-        }),
+    const response = await genai.models.generateContent({
+      model: "gemini-2.0-flash-preview-image-generation",
+      contents: [
+        {
+          role: "user",
+          parts: [
+            { inlineData: { mimeType: params.mimeType, data: imageBase64 } },
+            { text: params.prompt },
+          ],
+        },
       ],
-      config: {
-        editMode,
-        numberOfImages: 1,
-        outputMimeType: "image/jpeg",
-      },
+      config: { responseModalities: ["TEXT", "IMAGE"] },
     })
 
-    const imgBytes = response.generatedImages?.[0]?.image?.imageBytes
-    if (imgBytes) {
-      return Buffer.from(imgBytes, "base64")
+    const parts = response.candidates?.[0]?.content?.parts ?? []
+    for (const part of parts) {
+      if (part.inlineData?.data) {
+        return Buffer.from(part.inlineData.data, "base64")
+      }
     }
     return null
   } catch (err) {
@@ -226,7 +221,7 @@ export async function POST(req: NextRequest) {
     for (let i = 0; i < quantidade; i++) {
       const prompt = buildPrompt({ estilo, cenario, iluminacao, angulo, formato, observacoes, variacao: i + 1, total: quantidade })
       try {
-        const imgBuffer = await generateWithGemini({ imageBuffer: buffer, mimeType: imagem.type, prompt, estilo })
+        const imgBuffer = await generateWithGemini({ imageBuffer: buffer, mimeType: imagem.type, prompt })
 
         if (imgBuffer) {
           const geradaPath = `${user.id}/gerada_${geracao.id}_${i}.jpg`
