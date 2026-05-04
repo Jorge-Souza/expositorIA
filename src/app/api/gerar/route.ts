@@ -86,13 +86,14 @@ async function generateWithGemini(params: {
   imageBuffer: Buffer
   mimeType: string
   prompt: string
+  modelo: string
 }): Promise<Buffer | null> {
   const genai = new GoogleGenAI({ apiKey: GOOGLE_API_KEY })
   const imageBase64 = params.imageBuffer.toString("base64")
 
   try {
     const response = await genai.models.generateContent({
-      model: "gemini-2.5-flash-image",
+      model: params.modelo,
       contents: [
         {
           role: "user",
@@ -138,6 +139,7 @@ export async function POST(req: NextRequest) {
   const iluminacao  = (formData.get("iluminacao") as string) || "estudio_neutro"
   const angulo      = (formData.get("angulo") as string) || "frontal"
   const observacoes = (formData.get("observacoes") as string) || ""
+  const modelo      = (formData.get("modelo") as string) || "gemini-2.5-flash-image"
 
   if (!imagem) {
     return new Response(JSON.stringify({ error: "Imagem obrigatória" }), {
@@ -221,7 +223,7 @@ export async function POST(req: NextRequest) {
     for (let i = 0; i < quantidade; i++) {
       const prompt = buildPrompt({ estilo, cenario, iluminacao, angulo, formato, observacoes, variacao: i + 1, total: quantidade })
       try {
-        const imgBuffer = await generateWithGemini({ imageBuffer: buffer, mimeType: imagem.type, prompt })
+        const imgBuffer = await generateWithGemini({ imageBuffer: buffer, mimeType: imagem.type, prompt, modelo })
 
         if (imgBuffer) {
           const geradaPath = `${user.id}/gerada_${geracao.id}_${i}.jpg`

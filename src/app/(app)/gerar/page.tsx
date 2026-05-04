@@ -10,10 +10,10 @@ import {
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
-  CREDITOS_TABELA, TIPOS_PRODUTO, CENARIOS, ILUMINACOES, ANGULOS, FORMATOS,
+  CREDITOS_TABELA, TIPOS_PRODUTO, CENARIOS, ILUMINACOES, ANGULOS, FORMATOS, MODELOS_IA,
   type EstiloFoto, type TipoProduto, type TipoGeracao,
   type FormatoFoto, type Qualidade, type QuantidadeImagens,
-  type Cenario, type Iluminacao, type AnguloCamera,
+  type Cenario, type Iluminacao, type AnguloCamera, type ModeloIA,
 } from "@/lib/types"
 
 // ---------- tipos de estado ----------
@@ -29,6 +29,7 @@ interface GerarState {
   cenario: Cenario
   iluminacao: Iluminacao
   angulo: AnguloCamera
+  modelo: ModeloIA
   referencia: File | null
   observacoes: string
 }
@@ -45,6 +46,7 @@ const INITIAL: GerarState = {
   cenario: "marmore",
   iluminacao: "estudio_neutro",
   angulo: "frontal",
+  modelo: "gemini-2.5-flash-image",
   referencia: null,
   observacoes: "",
 }
@@ -119,6 +121,7 @@ export default function GerarPage() {
     form.append("iluminacao", state.iluminacao)
     form.append("angulo", state.angulo)
     form.append("observacoes", state.observacoes)
+    form.append("modelo", state.modelo)
     if (state.referencia) form.append("referencia", state.referencia)
 
     try {
@@ -583,6 +586,34 @@ export default function GerarPage() {
           </div>
         </div>
       )}
+
+      {/* modelo de IA */}
+      <div className="space-y-3">
+        <h2 className="font-semibold">Modelo de IA</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {MODELOS_IA.map(({ id, label, desc, badge }) => (
+            <button
+              key={id}
+              onClick={() => set("modelo", id)}
+              className={cn(
+                "relative flex flex-col gap-1 p-4 rounded-xl border-2 text-left transition-all",
+                state.modelo === id ? "border-primary bg-primary/5" : "border-border hover:border-primary/40 hover:bg-accent"
+              )}
+            >
+              {badge && (
+                <span className={cn(
+                  "absolute top-3 right-3 text-xs px-2 py-0.5 rounded-full font-medium",
+                  badge === "Recomendado" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+                )}>
+                  {badge}
+                </span>
+              )}
+              <span className={cn("font-semibold text-sm", state.modelo === id ? "text-primary" : "")}>{label}</span>
+              <span className="text-xs text-muted-foreground">{desc}</span>
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* foto de referência */}
       <div className="space-y-3">

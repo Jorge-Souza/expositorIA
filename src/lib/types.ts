@@ -59,6 +59,14 @@ export const PACKS: PackCredito[] = [
 // --- Geração de imagem ---
 
 export type EstiloFoto = "fundo_branco" | "ambientada" | "com_modelo"
+export type ModeloIA = "gemini-2.5-flash-image" | "gemini-3.1-flash-image-preview" | "gemini-3-pro-image-preview" | "nano-banana-pro-preview"
+
+export const MODELOS_IA: { id: ModeloIA; label: string; desc: string; badge?: string }[] = [
+  { id: "gemini-2.5-flash-image",       label: "Flash 2.5",       desc: "Rápido e equilibrado",          badge: "Recomendado" },
+  { id: "gemini-3.1-flash-image-preview",label: "Flash 3.1",      desc: "Mais recente, maior qualidade"  },
+  { id: "gemini-3-pro-image-preview",    label: "Pro 3",           desc: "Alta fidelidade, detalhes ricos"},
+  { id: "nano-banana-pro-preview",       label: "Nano Banana Pro", desc: "Modelo experimental exclusivo", badge: "Beta"       },
+]
 export type TipoProduto = "moda" | "calcados" | "acessorios" | "beleza" | "eletronicos" | "casa" | "alimentos" | "outros"
 export type TipoGeracao = "produto_unico" | "conjunto"
 export type FormatoFoto = "1:1" | "9:16" | "4:5" | "3:4" | "16:9" | "4:3"
