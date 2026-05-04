@@ -3,7 +3,25 @@ import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { GoogleGenAI } from "@google/genai"
 import sharp from "sharp"
+import fs from "fs"
+import path from "path"
 import { CREDITOS_TABELA, type Qualidade, type QuantidadeImagens } from "@/lib/types"
+
+function loadReferencias(): { mimeType: string; data: string }[] {
+  try {
+    const dir = path.join(process.cwd(), "public", "referencias")
+    if (!fs.existsSync(dir)) return []
+    return fs.readdirSync(dir)
+      .filter((f) => /\.(jpe?g|png|webp)$/i.test(f))
+      .slice(0, 3)
+      .map((f) => {
+        const ext = f.split(".").pop()!.toLowerCase()
+        const mime = ext === "png" ? "image/png" : ext === "webp" ? "image/webp" : "image/jpeg"
+        const data = fs.readFileSync(path.join(dir, f)).toString("base64")
+        return { mimeType: mime, data }
+      })
+  } catch { return [] }
+}
 
 const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY ?? ""
 
@@ -72,14 +90,17 @@ function buildPrompt(params: {
   const formato = FORMAT_RATIOS[params.formato] ?? "square format"
 
   if (params.estilo === "fundo_branco") {
-    return `Professional e-commerce product photography. Take this product and create a clean, high-quality white background product photo.
-- Pure white background, no gradients
-- Professional even studio lighting, soft shadows
-- ${angulo}
-- ${formato}
-- Product sharp, centered, and clearly visible
-- Ready for TikTok Shop and e-commerce listing
-${params.observacoes ? `Extra: ${params.observacoes}` : ""}
+    return `You are a professional jewelry and product photographer. Recreate this product on a pure white background exactly like the reference images provided.
+
+BACKGROUND: Pure white (#FFFFFF), completely flat, no gradients, no vignette, no texture.
+LIGHTING: Soft diffused studio light from above-front. Subtle specular highlights on metal/jewels. No harsh shadows.
+SHADOW: Very soft, natural drop shadow directly beneath the product only — like ambient occlusion. Barely visible.
+PRODUCT: Keep the product EXACTLY as it is — same shape, colors, stones, and details. Do not alter it.
+PLACEMENT: Perfectly centered, filling ~75% of the frame with even margin on all sides.
+ANGLE: ${angulo}
+FORMAT: ${formato}
+QUALITY: Ultra-sharp focus on all product details. Photorealistic. Ready for e-commerce listing.
+${params.observacoes ? `EXTRA: ${params.observacoes}` : ""}
 Variation ${params.variacao} of ${params.total}.`
   }
 
@@ -118,17 +139,25 @@ async function generateWithGemini(params: {
   mimeType: string
   prompt: string
   modelo: string
+  referencias?: { mimeType: string; data: string }[]
 }): Promise<Buffer | null> {
   const genai = new GoogleGenAI({ apiKey: GOOGLE_API_KEY })
   const imageBase64 = params.imageBuffer.toString("base64")
 
   try {
+    const refParts = (params.referencias ?? []).map((r) => ({
+      inlineData: { mimeType: r.mimeType, data: r.data },
+    }))
+
     const response = await genai.models.generateContent({
       model: params.modelo,
       contents: [
         {
           role: "user",
           parts: [
+            // referências primeiro (mostram o padrão esperado)
+            ...refParts,
+            // depois o produto a ser gerado
             { inlineData: { mimeType: params.mimeType, data: imageBase64 } },
             { text: params.prompt },
           ],
@@ -248,13 +277,14 @@ export async function POST(req: NextRequest) {
 
   ;(async () => {
     const imagensGeradas: string[] = []
+    const referencias = estilo === "fundo_branco" ? loadReferencias() : []
 
     await send({ type: "inicio", geracaoId: geracao.id, total: quantidade })
 
     for (let i = 0; i < quantidade; i++) {
       const prompt = buildPrompt({ estilo, cenario, iluminacao, angulo, formato, observacoes, variacao: i + 1, total: quantidade })
       try {
-        const imgBuffer = await generateWithGemini({ imageBuffer: buffer, mimeType: imagem.type, prompt, modelo })
+        const imgBuffer = await generateWithGemini({ imageBuffer: buffer, mimeType: imagem.type, prompt, modelo, referencias })
 
         if (imgBuffer) {
           const finalBuffer = await resizeToFormat(imgBuffer, formato)
