@@ -2,6 +2,7 @@ import { NextRequest } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { GoogleGenAI } from "@google/genai"
+import sharp from "sharp"
 import { CREDITOS_TABELA, type Qualidade, type QuantidadeImagens } from "@/lib/types"
 
 const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY ?? ""
@@ -38,6 +39,23 @@ const FORMAT_RATIOS: Record<string, string> = {
   "3:4":  "vertical 3:4 portrait",
   "16:9": "horizontal 16:9 widescreen",
   "4:3":  "horizontal 4:3 classic",
+}
+
+const FORMAT_DIMENSIONS: Record<string, { width: number; height: number }> = {
+  "1:1":  { width: 1024, height: 1024 },
+  "9:16": { width: 720,  height: 1280 },
+  "4:5":  { width: 820,  height: 1024 },
+  "3:4":  { width: 768,  height: 1024 },
+  "16:9": { width: 1280, height: 720  },
+  "4:3":  { width: 1024, height: 768  },
+}
+
+async function resizeToFormat(buffer: Buffer, formato: string): Promise<Buffer> {
+  const dims = FORMAT_DIMENSIONS[formato] ?? { width: 1024, height: 1024 }
+  return sharp(buffer)
+    .resize(dims.width, dims.height, { fit: "cover", position: "centre" })
+    .jpeg({ quality: 92 })
+    .toBuffer()
 }
 
 function buildPrompt(params: {
@@ -239,10 +257,11 @@ export async function POST(req: NextRequest) {
         const imgBuffer = await generateWithGemini({ imageBuffer: buffer, mimeType: imagem.type, prompt, modelo })
 
         if (imgBuffer) {
+          const finalBuffer = await resizeToFormat(imgBuffer, formato)
           const geradaPath = `${user.id}/gerada_${geracao.id}_${i}.jpg`
           const { error: saveErr } = await adminClient.storage
             .from("produtos")
-            .upload(geradaPath, imgBuffer, { contentType: "image/jpeg", upsert: true })
+            .upload(geradaPath, finalBuffer, { contentType: "image/jpeg", upsert: true })
 
           if (!saveErr) {
             const { data: { publicUrl } } = adminClient.storage.from("produtos").getPublicUrl(geradaPath)
