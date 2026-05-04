@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server"
 
-const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY || "AIzaSyCES9K7ZVqJSU00SzaTzMukSzcS30oLBqM"
+const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY ?? ""
 
 export const maxDuration = 60
 

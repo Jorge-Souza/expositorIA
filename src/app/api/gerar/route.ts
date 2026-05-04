@@ -4,7 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { GoogleGenAI } from "@google/genai"
 import { CREDITOS_TABELA, type Qualidade, type QuantidadeImagens } from "@/lib/types"
 
-const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY || "AIzaSyCES9K7ZVqJSU00SzaTzMukSzcS30oLBqM"
+const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY ?? ""
 
 export const maxDuration = 60
 
@@ -130,7 +130,7 @@ export async function POST(req: NextRequest) {
   const formData = await req.formData()
   const imagem      = formData.get("imagem") as File | null
   const estilo      = formData.get("estilo") as string
-  const tipoProduto = (formData.get("tipoProduto") as string) || "outros"
+
   const formato     = (formData.get("formato") as string) || "1:1"
   const qualidade   = (formData.get("qualidade") as Qualidade) || "1K"
   const quantidade  = Number(formData.get("quantidade") ?? "3") as QuantidadeImagens
