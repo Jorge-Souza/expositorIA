@@ -22,12 +22,14 @@ async function submitHiggsfieldJob(params: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: params.model,
-      prompt: params.prompt,
-      input_images: [{ type: "image_url", image_url: params.imageUrl }],
-      aspect_ratio: params.aspectRatio,
-      duration: params.duration,
-      motion_strength: 0.8,
+      params: {
+        model: params.model,
+        prompt: params.prompt,
+        input_images: [{ type: "image_url", image_url: params.imageUrl }],
+        aspect_ratio: params.aspectRatio,
+        duration: params.duration,
+        motion_strength: 0.8,
+      },
     }),
   })
 
