@@ -227,7 +227,7 @@ export default function GerarVideoPage() {
     <div className="fixed bottom-0 left-60 right-0 border-t border-border bg-card/95 backdrop-blur px-6 py-3 flex items-center justify-between gap-4">
       <div className="flex items-center gap-4 text-sm text-muted-foreground">
         <span>Rápido 5s: <span className="text-foreground font-medium">{CREDITOS_VIDEO["dop-lite"][5]} créditos</span></span>
-        <span>Premium 5s: <span className="text-foreground font-medium">{CREDITOS_VIDEO["dop-preview"][5]} créditos</span></span>
+        <span>Premium 5s: <span className="text-foreground font-medium">{CREDITOS_VIDEO["dop-standard"][5]} créditos</span></span>
       </div>
       {step < 1 ? (
         <Button
@@ -401,7 +401,7 @@ export default function GerarVideoPage() {
               </div>
               <span className="text-xs text-muted-foreground">{desc}</span>
               <span className="text-xs font-medium text-muted-foreground mt-1">
-                {CREDITOS_VIDEO[id][state.duracao]} créditos · {state.duracao}s
+                {CREDITOS_VIDEO[id as ModeloVideo][state.duracao]} créditos · {state.duracao}s
               </span>
             </button>
           ))}
