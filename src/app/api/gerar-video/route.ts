@@ -89,24 +89,24 @@ export async function POST(req: NextRequest) {
 
   const { data: { publicUrl: imagemUrl } } = adminClient.storage.from("produtos").getPublicUrl(originalPath)
 
-  // Salva registro do vídeo no banco
-  const { data: video, error: videoError } = await adminClient
-    .from("videos_gerados")
+  // Salva na tabela geracoes com tipo=video
+  const { data: geracao, error: geracaoError } = await adminClient
+    .from("geracoes")
     .insert({
       user_id: user.id,
       imagem_original_url: imagemUrl,
-      prompt,
-      modelo,
-      aspecto,
-      duracao,
+      imagens_geradas: [],
+      estilo: `Vídeo · ${modelo} · ${aspecto} · ${duracao}s`,
+      quantidade: 1,
       creditos_usados: creditosNecessarios,
       status: "processando",
+      tipo: "video",
     })
     .select()
     .single()
 
-  if (videoError || !video) {
-    return Response.json({ error: "Erro ao criar registro: " + (videoError?.message ?? "desconhecido") }, { status: 500 })
+  if (geracaoError || !geracao) {
+    return Response.json({ error: "Erro ao criar registro: " + (geracaoError?.message ?? "desconhecido") }, { status: 500 })
   }
 
   // Debita créditos
@@ -117,11 +117,11 @@ export async function POST(req: NextRequest) {
   // Submete job ao Higgsfield
   try {
     const jobId = await submitHiggsfieldJob({ imageUrl: imagemUrl, prompt, model: modelo, aspectRatio: aspecto, duration: duracao })
-    await adminClient.from("videos_gerados").update({ higgsfield_job_id: jobId }).eq("id", video.id)
-    return Response.json({ videoId: video.id, jobId })
+    await adminClient.from("geracoes").update({ higgsfield_job_id: jobId }).eq("id", geracao.id)
+    return Response.json({ videoId: geracao.id, jobId })
   } catch (err) {
     const mensagem = err instanceof Error ? err.message : String(err)
-    await adminClient.from("videos_gerados").update({ status: "erro", erro: mensagem }).eq("id", video.id)
+    await adminClient.from("geracoes").update({ status: "erro", erro: mensagem }).eq("id", geracao.id)
     await adminClient.from("profiles").update({ credits: profile.credits }).eq("id", user.id)
     return Response.json({ error: mensagem }, { status: 500 })
   }

@@ -14,27 +14,26 @@ export async function GET(req: NextRequest) {
   if (!videoId) return Response.json({ error: "videoId obrigatório" }, { status: 400 })
 
   const adminClient = createAdminClient()
-  const { data: video } = await adminClient
-    .from("videos_gerados")
+  const { data: geracao } = await adminClient
+    .from("geracoes")
     .select("*")
     .eq("id", videoId)
     .eq("user_id", user.id)
     .single()
 
-  if (!video) return Response.json({ error: "Vídeo não encontrado" }, { status: 404 })
+  if (!geracao) return Response.json({ error: "Vídeo não encontrado" }, { status: 404 })
 
-  // Se já concluído ou com erro, retorna o estado atual
-  if (video.status !== "processando") {
-    return Response.json({ status: video.status, videoUrl: video.video_url, erro: video.erro })
+  if (geracao.status !== "processando") {
+    return Response.json({ status: geracao.status, videoUrl: geracao.video_url, erro: geracao.erro })
   }
 
-  if (!video.higgsfield_job_id) {
+  if (!geracao.higgsfield_job_id) {
     return Response.json({ status: "processando", videoUrl: null })
   }
 
   // Consulta o Higgsfield pelo status do job
   try {
-    const res = await fetch(`${HIGGSFIELD_BASE}/v1/generations/${video.higgsfield_job_id}`, {
+    const res = await fetch(`${HIGGSFIELD_BASE}/v1/generations/${geracao.higgsfield_job_id}`, {
       headers: { "Authorization": `Key ${HIGGSFIELD_API_KEY}` },
     })
 
@@ -48,7 +47,7 @@ export async function GET(req: NextRequest) {
     if (higgsfieldStatus === "completed") {
       const videoUrl: string = data.video?.url ?? data.output?.url ?? data.url ?? ""
       await adminClient
-        .from("videos_gerados")
+        .from("geracoes")
         .update({ status: "concluido", video_url: videoUrl })
         .eq("id", videoId)
       return Response.json({ status: "concluido", videoUrl })
@@ -57,7 +56,7 @@ export async function GET(req: NextRequest) {
     if (higgsfieldStatus === "failed" || higgsfieldStatus === "nsfw" || higgsfieldStatus === "cancelled") {
       const erro = data.error ?? `Job ${higgsfieldStatus}`
       await adminClient
-        .from("videos_gerados")
+        .from("geracoes")
         .update({ status: "erro", erro })
         .eq("id", videoId)
       return Response.json({ status: "erro", erro })
