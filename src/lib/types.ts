@@ -126,6 +126,49 @@ export const FORMATOS: { id: FormatoFoto; label: string; desc: string; grupo: st
   { id: "4:3",  label: "4:3 Clássico",     desc: "Apresentações",          grupo: "HORIZONTAL" },
 ]
 
+// --- Geração de vídeo ---
+
+export type ModeloVideo = "dop-lite" | "dop-preview"
+export type AspectRatioVideo = "9:16" | "1:1" | "4:5" | "16:9"
+export type DuracaoVideo = 5 | 10
+
+export interface VideoGerado {
+  id: string
+  user_id: string
+  imagem_original_url: string
+  video_url: string | null
+  higgsfield_job_id: string | null
+  prompt: string
+  modelo: ModeloVideo
+  aspecto: AspectRatioVideo
+  duracao: DuracaoVideo
+  creditos_usados: number
+  status: "processando" | "concluido" | "erro"
+  erro: string | null
+  created_at: string
+}
+
+export const CREDITOS_VIDEO: Record<ModeloVideo, Record<DuracaoVideo, number>> = {
+  "dop-lite":    { 5: 8,  10: 14 },
+  "dop-preview": { 5: 15, 10: 25 },
+}
+
+export const MOVIMENTOS_VIDEO: { id: string; label: string; desc: string; prompt: string }[] = [
+  { id: "flutuar",   label: "Flutuar Suave",       desc: "O produto flutua levemente para cima e para baixo", prompt: "The product gently floats and hovers with a subtle up-and-down motion, soft and elegant" },
+  { id: "girar",     label: "Girar 360°",           desc: "Rotação completa do produto",                       prompt: "The product slowly rotates a full 360 degrees, smooth turntable rotation" },
+  { id: "zoom",      label: "Zoom Cinematográfico", desc: "Aproximação suave e elegante no produto",           prompt: "Smooth cinematic slow zoom in toward the product, elegant and professional" },
+  { id: "balanco",   label: "Balanço Elegante",     desc: "O produto balança levemente para os lados",         prompt: "The product gently sways left and right with a natural, elegant motion" },
+  { id: "brilho",    label: "Luz & Brilho",         desc: "Reflexos de luz e brilho no produto",               prompt: "Subtle light reflections and gleam effect sweeping across the product surface" },
+  { id: "revelacao", label: "Entrada Dramática",    desc: "Entrada cinematográfica com impacto visual",        prompt: "Dynamic cinematic reveal of the product with dramatic lighting sweep, high impact" },
+]
+
+export const FORMATOS_VIDEO: { id: AspectRatioVideo; label: string; desc: string }[] = [
+  { id: "9:16", label: "9:16 Vertical", desc: "TikTok, Reels, Stories" },
+  { id: "1:1",  label: "1:1 Quadrado", desc: "Feed, TikTok Shop" },
+  { id: "4:5",  label: "4:5 Instagram", desc: "Feed Instagram" },
+  { id: "16:9", label: "16:9 Horizontal", desc: "YouTube, site" },
+]
+
 // ESTILOS legado (mantido para compatibilidade com histórico antigo)
 export const ESTILOS = [
   { id: "clean_white", label: "Fundo Branco Clean" },

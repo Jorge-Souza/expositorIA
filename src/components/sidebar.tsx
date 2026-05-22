@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { Sparkles, LayoutDashboard, History, Coins, LogOut } from "lucide-react"
+import { Sparkles, LayoutDashboard, History, Coins, LogOut, Video } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { createClient } from "@/lib/supabase/client"
 import { toast } from "sonner"
@@ -10,6 +10,7 @@ import { toast } from "sonner"
 const navItems = [
   { href: "/dashboard", label: "Início", icon: LayoutDashboard },
   { href: "/gerar", label: "Gerar Imagens", icon: Sparkles },
+  { href: "/gerar-video", label: "Gerar Vídeos", icon: Video },
   { href: "/historico", label: "Histórico", icon: History },
   { href: "/creditos", label: "Créditos", icon: Coins },
 ]
