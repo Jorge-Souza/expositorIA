@@ -37,8 +37,8 @@ const INITIAL: VideoState = {
 }
 
 const MODELOS_VIDEO: { id: ModeloVideo; label: string; desc: string; badge?: string }[] = [
-  { id: "dop-lite",    label: "Rápido",   desc: "Geração mais veloz, boa qualidade", badge: "Recomendado" },
-  { id: "dop-preview", label: "Premium",  desc: "Máxima qualidade cinematográfica" },
+  { id: "dop-lite",     label: "Rápido",   desc: "Geração mais veloz, boa qualidade", badge: "Recomendado" },
+  { id: "dop-standard", label: "Premium",  desc: "Máxima qualidade cinematográfica" },
 ]
 
 const DURACOES: DuracaoVideo[] = [5, 10]

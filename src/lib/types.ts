@@ -128,7 +128,7 @@ export const FORMATOS: { id: FormatoFoto; label: string; desc: string; grupo: st
 
 // --- Geração de vídeo ---
 
-export type ModeloVideo = "dop-lite" | "dop-preview"
+export type ModeloVideo = "dop-lite" | "dop-standard"
 export type AspectRatioVideo = "9:16" | "1:1" | "4:5" | "16:9"
 export type DuracaoVideo = 5 | 10
 
@@ -149,8 +149,8 @@ export interface VideoGerado {
 }
 
 export const CREDITOS_VIDEO: Record<ModeloVideo, Record<DuracaoVideo, number>> = {
-  "dop-lite":    { 5: 8,  10: 14 },
-  "dop-preview": { 5: 15, 10: 25 },
+  "dop-lite":     { 5: 8,  10: 14 },
+  "dop-standard": { 5: 15, 10: 25 },
 }
 
 export const MOVIMENTOS_VIDEO: { id: string; label: string; desc: string; prompt: string }[] = [

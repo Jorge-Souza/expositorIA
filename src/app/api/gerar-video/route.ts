@@ -15,7 +15,7 @@ async function submitHiggsfieldJob(params: {
   aspectRatio: AspectRatioVideo
   duration: DuracaoVideo
 }): Promise<string> {
-  const res = await fetch(`${HIGGSFIELD_BASE}/v1/generations`, {
+  const res = await fetch(`${HIGGSFIELD_BASE}/v1/image2video/dop`, {
     method: "POST",
     headers: {
       "Authorization": `Key ${HIGGSFIELD_API_KEY}`,
@@ -24,7 +24,7 @@ async function submitHiggsfieldJob(params: {
     body: JSON.stringify({
       model: params.model,
       prompt: params.prompt,
-      image_urls: [params.imageUrl],
+      input_images: [{ type: "image_url", image_url: params.imageUrl }],
       aspect_ratio: params.aspectRatio,
       duration: params.duration,
       motion_strength: 0.8,
@@ -38,7 +38,7 @@ async function submitHiggsfieldJob(params: {
 
   const data = await res.json()
   const jobId = data.request_id ?? data.id ?? data.job_id
-  if (!jobId) throw new Error("Higgsfield não retornou ID do job")
+  if (!jobId) throw new Error("Higgsfield não retornou ID do job: " + JSON.stringify(data))
   return jobId
 }
 
