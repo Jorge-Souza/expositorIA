@@ -106,7 +106,7 @@ export async function POST(req: NextRequest) {
     .single()
 
   if (videoError || !video) {
-    return Response.json({ error: "Erro ao criar registro" }, { status: 500 })
+    return Response.json({ error: "Erro ao criar registro: " + (videoError?.message ?? "desconhecido") }, { status: 500 })
   }
 
   // Debita créditos
