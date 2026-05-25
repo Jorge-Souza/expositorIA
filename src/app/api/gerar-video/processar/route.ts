@@ -8,11 +8,11 @@ const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY ?? ""
 export const maxDuration = 60
 
 const MOVIMENTO_PROMPTS: Record<string, string> = {
-  catwalk:   "Fashion model walking confidently on a runway, elegant catwalk stride, professional fashion show",
-  orbit:     "Camera slowly orbiting 360 degrees around the fashion model, smooth circular camera movement",
-  glam:      "Glamorous fashion editorial movement, slow dramatic pose, high-fashion magazine style",
-  dolly:     "Smooth cinematic zoom toward the product, elegant slow push-in camera movement",
-  paparazzi: "Fashion celebrity moment, dynamic movement with dramatic lighting, editorial energy",
+  catwalk:   "Person walking forward confidently, smooth natural stride, bright studio lighting, clean background",
+  orbit:     "Camera slowly rotating around a person, smooth circular movement, studio lighting",
+  glam:      "Person holding a pose with slow elegant movement, soft dramatic lighting, clean studio background",
+  dolly:     "Camera smoothly pushing in toward the subject, slow cinematic zoom, bright even lighting",
+  paparazzi: "Person turning toward camera with dynamic natural movement, bright editorial lighting",
 }
 
 async function gerarImagemComGemini(params: {
@@ -132,10 +132,10 @@ export async function POST(req: NextRequest) {
       imageUrlParaVideo = publicUrl
     }
 
-    const videoPrompt = MOVIMENTO_PROMPTS[movimentoId] ?? movimentoLabel ?? "Elegant fashion movement, professional e-commerce video"
+    const videoPrompt = MOVIMENTO_PROMPTS[movimentoId] ?? movimentoLabel ?? "Person holding product with smooth natural movement, bright studio lighting"
     const fullPrompt = modo === "foco"
-      ? `${videoPrompt}, product showcase, professional e-commerce, TikTok Shop style`
-      : `${videoPrompt}, TikTok Shop Brazil, professional fashion e-commerce`
+      ? `${videoPrompt}, product display, clean background, e-commerce style`
+      : `${videoPrompt}, product display, clean studio background, e-commerce`
 
     const operationName = await submitVeoJob({
       imageUrl: imageUrlParaVideo,
