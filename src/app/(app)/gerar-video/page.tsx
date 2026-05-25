@@ -336,6 +336,17 @@ export default function GerarVideoPage() {
           </button>
         </div>
 
+        {/* Confirmação modo foco */}
+        {state.modo === "foco" && (
+          <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 flex items-center gap-3">
+            <Package className="h-5 w-5 text-primary shrink-0" />
+            <div>
+              <p className="text-sm font-medium text-primary">Foco no Produto selecionado</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Nenhum personagem necessário. Clique em <strong>Continuar</strong> para escolher o movimento.</p>
+            </div>
+          </div>
+        )}
+
         {/* Grid de personagens — só aparece se escolheu feminino ou masculino */}
         {modelosFiltrados.length > 0 && (
           <div className="space-y-3">
