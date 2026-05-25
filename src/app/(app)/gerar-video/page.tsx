@@ -58,6 +58,8 @@ export default function GerarVideoPage() {
   const [erroMsg, setErroMsg] = useState<string | null>(null)
   const [etapa, setEtapa] = useState<"imagem" | "video" | null>(null)
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const [segundos, setSegundos] = useState(0)
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   function set<K extends keyof VideoState>(key: K, value: VideoState[K]) {
     setState((s) => ({ ...s, [key]: value }))
@@ -107,7 +109,7 @@ export default function GerarVideoPage() {
     setVideoUrl(null)
     setPollingStatus(null)
     setErroMsg(null)
-    setEtapa(state.modo === "foco" ? "video" : "imagem")
+    setEtapa(state.modo !== "foco" ? "imagem" : "video")
 
     const form = new FormData()
     form.append("imagem", state.imagem)
@@ -125,22 +127,55 @@ export default function GerarVideoPage() {
     }
 
     try {
+      // Passo 1: cria registro (rápido)
       const res = await fetch("/api/gerar-video", { method: "POST", body: form })
       const data = await res.json()
       if (!res.ok) { toast.error(data.error ?? "Erro ao iniciar geração"); setLoading(false); return }
+
       setVideoId(data.videoId)
       setPollingStatus("processando")
-      if (state.modo !== "foco") setEtapa("video")
+
+      // Passo 2: processa Gemini + Higgsfield (pode demorar, mas retorna com erro real se falhar)
+      const res2 = await fetch("/api/gerar-video/processar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ videoId: data.videoId, imagemOriginalUrl: data.imagemOriginalUrl }),
+      })
+      const data2 = await res2.json()
+      if (!res2.ok) {
+        toast.error(data2.error ?? "Erro ao processar vídeo")
+        setPollingStatus("erro")
+        setErroMsg(data2.error ?? "Erro ao processar")
+        setLoading(false)
+        return
+      }
+      setEtapa("video")
     } catch {
       toast.error("Erro de conexão. Tente novamente.")
       setLoading(false)
     }
   }
 
+  useEffect(() => {
+    if (loading || pollingStatus === "processando") {
+      setSegundos(0)
+      timerRef.current = setInterval(() => setSegundos((s) => s + 1), 1000)
+    } else {
+      if (timerRef.current) clearInterval(timerRef.current)
+    }
+    return () => { if (timerRef.current) clearInterval(timerRef.current) }
+  }, [loading, pollingStatus])
+
+  function formatarTempo(s: number) {
+    const m = Math.floor(s / 60)
+    const seg = s % 60
+    return m > 0 ? `${m}m ${seg.toString().padStart(2, "0")}s` : `${seg}s`
+  }
+
   function resetar() {
     setLoading(false); setPollingStatus(null); setVideoId(null)
     setVideoUrl(null); setErroMsg(null); setEtapa(null)
-    setState(INITIAL); setStep(0)
+    setSegundos(0); setState(INITIAL); setStep(0)
   }
 
   function selecionarModo(modo: Modo) {
@@ -164,28 +199,72 @@ export default function GerarVideoPage() {
       </div>
 
       {pollingStatus === "processando" && (
-        <div className="flex flex-col items-center gap-6 py-10">
+        <div className="flex flex-col items-center gap-6 py-6">
           <div className="relative w-24 h-24 rounded-2xl overflow-hidden border border-border">
             {state.preview && <img src={state.preview} alt="produto" className="w-full h-full object-cover" />}
             <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
               <Loader2 className="h-8 w-8 text-white animate-spin" />
             </div>
           </div>
-          {state.modo !== "foco" && (
-            <div className="w-full max-w-xs space-y-2">
-              <div className="flex justify-between text-xs text-muted-foreground">
-                <span className={cn(etapa === "imagem" ? "text-primary font-medium" : "")}>1. Gerar imagem</span>
-                <span className={cn(etapa === "video" ? "text-primary font-medium" : "")}>2. Animar vídeo</span>
+
+          {/* Timer */}
+          <div className="text-center">
+            <p className="text-3xl font-mono font-bold tabular-nums">{formatarTempo(segundos)}</p>
+            <p className="text-xs text-muted-foreground mt-1">tempo decorrido</p>
+          </div>
+
+          {/* Etapas */}
+          <div className="w-full max-w-sm space-y-3">
+            {state.modo !== "foco" && (
+              <div className={cn("flex items-center gap-3 px-4 py-3 rounded-xl border transition-colors",
+                etapa === "imagem" ? "border-primary/40 bg-primary/5" : "border-border bg-muted/30")}>
+                <div className={cn("w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-xs font-bold",
+                  etapa === "imagem" ? "bg-primary text-white" : "bg-muted text-muted-foreground")}>
+                  {etapa === "video" ? "✓" : "1"}
+                </div>
+                <div>
+                  <p className={cn("text-sm font-medium", etapa === "imagem" ? "text-primary" : etapa === "video" ? "text-muted-foreground line-through" : "")}>
+                    Gerar imagem com modelo
+                  </p>
+                  <p className="text-xs text-muted-foreground">Gemini · ~30–60s</p>
+                </div>
+                {etapa === "imagem" && <Loader2 className="h-4 w-4 text-primary animate-spin ml-auto" />}
               </div>
-              <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
-                <div className={cn("h-full bg-primary transition-all duration-700", etapa === "imagem" ? "w-1/4 animate-pulse" : "w-3/4 animate-pulse")} />
+            )}
+
+            <div className={cn("flex items-center gap-3 px-4 py-3 rounded-xl border transition-colors",
+              etapa === "video" ? "border-primary/40 bg-primary/5" : "border-border bg-muted/30")}>
+              <div className={cn("w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-xs font-bold",
+                etapa === "video" ? "bg-primary text-white" : "bg-muted text-muted-foreground")}>
+                {state.modo === "foco" ? "1" : "2"}
               </div>
+              <div>
+                <p className={cn("text-sm font-medium", etapa === "video" ? "text-primary" : "")}>
+                  Animar vídeo
+                </p>
+                <p className="text-xs text-muted-foreground">Higgsfield · ~1–2 min</p>
+              </div>
+              {etapa === "video" && <Loader2 className="h-4 w-4 text-primary animate-spin ml-auto" />}
             </div>
-          )}
-          <p className="text-xs text-muted-foreground">
-            {state.modelo ? `Modelo: ${state.modelo.label} · ` : ""}
-            Movimento: {state.movimento?.label}
-          </p>
+          </div>
+
+          {/* Barra de progresso baseada em tempo */}
+          {(() => {
+            const total = state.modo === "foco" ? 90 : 180
+            const pct = Math.min(95, Math.round((segundos / total) * 100))
+            return (
+              <div className="w-full max-w-sm space-y-1">
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>Progresso estimado</span>
+                  <span>{pct}%</span>
+                </div>
+                <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+                  <div className="h-full bg-primary rounded-full transition-all duration-1000"
+                    style={{ width: `${pct}%` }} />
+                </div>
+              </div>
+            )
+          })()}
         </div>
       )}
 
