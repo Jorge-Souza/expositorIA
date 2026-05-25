@@ -193,14 +193,6 @@ export const CREDITOS_VIDEO: Record<ModeloVideo, Record<DuracaoVideo, number>> =
   "dop-standard": { 5: 15, 10: 25 },
 }
 
-export const MOVIMENTOS_VIDEO: { id: string; label: string; desc: string; prompt: string }[] = [
-  { id: "flutuar",   label: "Flutuar Suave",       desc: "O produto flutua levemente para cima e para baixo", prompt: "The product gently floats and hovers with a subtle up-and-down motion, soft and elegant" },
-  { id: "girar",     label: "Girar 360°",           desc: "Rotação completa do produto",                       prompt: "The product slowly rotates a full 360 degrees, smooth turntable rotation" },
-  { id: "zoom",      label: "Zoom Cinematográfico", desc: "Aproximação suave e elegante no produto",           prompt: "Smooth cinematic slow zoom in toward the product, elegant and professional" },
-  { id: "balanco",   label: "Balanço Elegante",     desc: "O produto balança levemente para os lados",         prompt: "The product gently sways left and right with a natural, elegant motion" },
-  { id: "brilho",    label: "Luz & Brilho",         desc: "Reflexos de luz e brilho no produto",               prompt: "Subtle light reflections and gleam effect sweeping across the product surface" },
-  { id: "revelacao", label: "Entrada Dramática",    desc: "Entrada cinematográfica com impacto visual",        prompt: "Dynamic cinematic reveal of the product with dramatic lighting sweep, high impact" },
-]
 
 export const FORMATOS_VIDEO: { id: AspectRatioVideo; label: string; desc: string }[] = [
   { id: "9:16", label: "9:16 Vertical", desc: "TikTok, Reels, Stories" },
