@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { Sparkles, LayoutDashboard, History, Coins, LogOut, Video } from "lucide-react"
+import { Sparkles, LayoutDashboard, History, Coins, LogOut, Video, ShieldCheck } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { createClient } from "@/lib/supabase/client"
 import { toast } from "sonner"
@@ -15,12 +15,15 @@ const navItems = [
   { href: "/creditos", label: "Créditos", icon: Coins },
 ]
 
+const ADMIN_EMAIL = "jorge.expdigital@gmail.com"
+
 interface SidebarProps {
   credits: number
   nomeUsuario: string | null
+  email?: string | null
 }
 
-export function Sidebar({ credits, nomeUsuario }: SidebarProps) {
+export function Sidebar({ credits, nomeUsuario, email }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
 
@@ -62,6 +65,20 @@ export function Sidebar({ credits, nomeUsuario }: SidebarProps) {
             {label}
           </Link>
         ))}
+        {email === ADMIN_EMAIL && (
+          <Link
+            href="/admin"
+            className={cn(
+              "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors mt-2 border border-primary/20",
+              pathname.startsWith("/admin")
+                ? "bg-primary/10 text-primary"
+                : "text-primary hover:bg-primary/10"
+            )}
+          >
+            <ShieldCheck className="h-4 w-4 shrink-0" />
+            Painel Admin
+          </Link>
+        )}
       </nav>
 
       {/* Credits + user */}
