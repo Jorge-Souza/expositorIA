@@ -16,7 +16,7 @@ async function gerarImagemComGemini(params: {
   modeloDescricao: string
   aspecto: string
 }): Promise<Buffer> {
-  const genai = new GoogleGenAI({ apiKey: GOOGLE_API_KEY, apiVersion: "v1alpha" })
+  const genai = new GoogleGenAI({ apiKey: GOOGLE_API_KEY })
   const imageBase64 = params.produtoBuffer.toString("base64")
 
   const prompt = `Professional fashion e-commerce photo for TikTok Shop Brazil.
@@ -30,7 +30,7 @@ The model is wearing or using the product shown in the uploaded image.
 - Ready for TikTok Shop Brazil`
 
   const response = await genai.models.generateContent({
-    model: "gemini-2.0-flash-exp",
+    model: "gemini-2.5-flash-image",
     contents: [{
       role: "user",
       parts: [
