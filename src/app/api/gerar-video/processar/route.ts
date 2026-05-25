@@ -58,26 +58,38 @@ async function submitVeoJob(params: {
   aspectRatio: string
   durationSeconds: number
 }): Promise<string> {
-  const genai = new GoogleGenAI({ apiKey: GOOGLE_API_KEY })
-
   const imgResp = await fetch(params.imageUrl)
   const imgBuffer = Buffer.from(await imgResp.arrayBuffer())
   const imageBase64 = imgBuffer.toString("base64")
   const mimeType = imgResp.headers.get("content-type") ?? "image/jpeg"
 
-  const operation = await (genai.models as any).generateVideo({
-    model: "veo-2.0-generate-001",
-    prompt: params.prompt,
-    image: { imageBytes: imageBase64, mimeType },
-    config: {
-      aspectRatio: params.aspectRatio,
-      numberOfVideos: 1,
-      durationSeconds: params.durationSeconds,
-    },
-  })
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/veo-2.0-generate-001:predictLongRunning?key=${GOOGLE_API_KEY}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        instances: [{
+          prompt: params.prompt,
+          image: { bytesBase64Encoded: imageBase64, mimeType },
+        }],
+        parameters: {
+          aspectRatio: params.aspectRatio,
+          sampleCount: 1,
+          durationSeconds: params.durationSeconds,
+        },
+      }),
+    }
+  )
 
-  const opName = operation?.name ?? operation?.operationName
-  if (!opName) throw new Error("Veo não retornou operation name: " + JSON.stringify(operation))
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(`Veo error ${res.status}: ${text}`)
+  }
+
+  const data = await res.json()
+  const opName = data.name
+  if (!opName) throw new Error("Veo não retornou operation name: " + JSON.stringify(data))
   return opName
 }
 
