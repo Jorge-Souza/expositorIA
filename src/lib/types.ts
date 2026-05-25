@@ -140,6 +140,26 @@ export interface ModeloInspiracao {
   foto: string
 }
 
+export interface ReferenciaFoco {
+  id: string
+  label: string
+  foto: string
+}
+
+export const REFERENCIAS_FOCO: ReferenciaFoco[] = [
+  { id: "foco1",  label: "Ref 1",  foto: "/referencias/foco1.jpg"  },
+  { id: "foco2",  label: "Ref 2",  foto: "/referencias/foco2.jpg"  },
+  { id: "foco3",  label: "Ref 3",  foto: "/referencias/foco3.jpg"  },
+  { id: "foco4",  label: "Ref 4",  foto: "/referencias/foco4.jpg"  },
+  { id: "foco5",  label: "Ref 5",  foto: "/referencias/foco5.jpg"  },
+  { id: "foco6",  label: "Ref 6",  foto: "/referencias/foco6.jpg"  },
+  { id: "foco7",  label: "Ref 7",  foto: "/referencias/foco7.jpg"  },
+  { id: "foco8",  label: "Ref 8",  foto: "/referencias/foco8.jpg"  },
+  { id: "foco9",  label: "Ref 9",  foto: "/referencias/foco9.jpg"  },
+  { id: "foco10", label: "Ref 10", foto: "/referencias/foco10.jpg" },
+  { id: "foco11", label: "Ref 11", foto: "/referencias/foco11.jpg" },
+]
+
 export interface MovimentoVideo {
   id: string
   label: string

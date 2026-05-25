@@ -9,8 +9,8 @@ import {
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
-  MODELOS_INSPIRACAO, MOVIMENTOS_VIDEO,
-  type ModeloInspiracao, type MovimentoVideo, type AspectRatioVideo, type DuracaoVideo,
+  MODELOS_INSPIRACAO, MOVIMENTOS_VIDEO, REFERENCIAS_FOCO,
+  type ModeloInspiracao, type MovimentoVideo, type AspectRatioVideo, type DuracaoVideo, type ReferenciaFoco,
 } from "@/lib/types"
 
 const CREDITOS_POR_VIDEO = 10
@@ -22,6 +22,7 @@ interface VideoState {
   preview: string | null
   modo: Modo | null
   modelo: ModeloInspiracao | null
+  referenciaFoco: ReferenciaFoco | null
   movimento: MovimentoVideo | null
   aspecto: AspectRatioVideo
   duracao: DuracaoVideo
@@ -32,6 +33,7 @@ const INITIAL: VideoState = {
   preview: null,
   modo: null,
   modelo: null,
+  referenciaFoco: null,
   movimento: null,
   aspecto: "9:16",
   duracao: 5,
@@ -118,6 +120,9 @@ export default function GerarVideoPage() {
       form.append("modeloDescricao", state.modelo.descricao)
       form.append("modeloLabel", state.modelo.label)
     }
+    if (state.referenciaFoco) {
+      form.append("referenciaFocoLabel", state.referenciaFoco.label)
+    }
 
     try {
       const res = await fetch("/api/gerar-video", { method: "POST", body: form })
@@ -139,7 +144,7 @@ export default function GerarVideoPage() {
   }
 
   function selecionarModo(modo: Modo) {
-    setState((s) => ({ ...s, modo, modelo: null }))
+    setState((s) => ({ ...s, modo, modelo: null, referenciaFoco: null }))
   }
 
   // Tela de geração / resultado
@@ -213,7 +218,7 @@ export default function GerarVideoPage() {
   )
 
   const canContinueStep0 = !!state.imagem
-  const canContinueStep1 = state.modo === "foco" || (!!state.modo && !!state.modelo)
+  const canContinueStep1 = (state.modo === "foco" && !!state.referenciaFoco) || (!!state.modo && state.modo !== "foco" && !!state.modelo)
   const canGerar = canContinueStep1 && !!state.movimento
 
   const BottomBar = () => (
@@ -336,13 +341,34 @@ export default function GerarVideoPage() {
           </button>
         </div>
 
-        {/* Confirmação modo foco */}
+        {/* Grid de referências de foco — só aparece no modo foco */}
         {state.modo === "foco" && (
-          <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 flex items-center gap-3">
-            <Package className="h-5 w-5 text-primary shrink-0" />
-            <div>
-              <p className="text-sm font-medium text-primary">Foco no Produto selecionado</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Nenhum personagem necessário. Clique em <strong>Continuar</strong> para escolher o movimento.</p>
+          <div className="space-y-3">
+            <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+              Escolha uma referência de enquadramento
+            </h2>
+            <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
+              {REFERENCIAS_FOCO.map((r) => (
+                <button key={r.id} onClick={() => set("referenciaFoco", r)}
+                  className={cn("relative flex flex-col items-center gap-1.5 p-2 rounded-2xl border-2 transition-all",
+                    state.referenciaFoco?.id === r.id ? "border-primary bg-primary/5" : "border-border hover:border-primary/40 hover:bg-accent")}>
+                  <div className="relative w-full aspect-square rounded-xl bg-muted overflow-hidden">
+                    <img src={r.foto} alt={r.label}
+                      className="w-full h-full object-cover"
+                      onError={(e) => { (e.target as HTMLImageElement).style.display = "none" }} />
+                    {state.referenciaFoco?.id === r.id && (
+                      <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                        <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
+                          <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <span className={cn("text-xs font-medium", state.referenciaFoco?.id === r.id ? "text-primary" : "text-muted-foreground")}>{r.label}</span>
+                </button>
+              ))}
             </div>
           </div>
         )}

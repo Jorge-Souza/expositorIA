@@ -1,4 +1,4 @@
-import { NextRequest } from "next/server"
+import { NextRequest, after } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { GoogleGenAI } from "@google/genai"
@@ -145,8 +145,8 @@ export async function POST(req: NextRequest) {
   // Debita créditos
   await adminClient.from("profiles").update({ credits: profile.credits - CREDITOS_POR_VIDEO }).eq("id", user.id)
 
-  // Pipeline assíncrono
-  ;(async () => {
+  // Pipeline assíncrono — after() mantém a função viva no Vercel após a resposta
+  after(async () => {
     try {
       let imageUrlParaVideo: string
 
@@ -182,7 +182,7 @@ export async function POST(req: NextRequest) {
       await adminClient.from("geracoes").update({ status: "erro", erro: mensagem }).eq("id", geracao.id)
       await adminClient.from("profiles").update({ credits: profile.credits }).eq("id", user.id)
     }
-  })()
+  })
 
   return Response.json({ videoId: geracao.id })
 }
