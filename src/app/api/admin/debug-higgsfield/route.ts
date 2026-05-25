@@ -27,21 +27,27 @@ export async function GET(req: NextRequest) {
 
   const results = await Promise.all((jobs ?? []).map(async (job) => {
     // Tenta diferentes endpoints do Higgsfield
-    const endpoints = [
-      `/v1/generations/${job.higgsfield_job_id}`,
-      `/v1/image2video/dop/${job.higgsfield_job_id}`,
-      `/v1/requests/${job.higgsfield_job_id}`,
+    const attempts = [
+      { method: "GET",  url: `/v1/generations/${job.higgsfield_job_id}` },
+      { method: "POST", url: `/v1/generations/${job.higgsfield_job_id}` },
+      { method: "GET",  url: `/v1/image2video/dop/${job.higgsfield_job_id}` },
+      { method: "POST", url: `/v1/image2video/dop/${job.higgsfield_job_id}` },
+      { method: "GET",  url: `/v1/status/${job.higgsfield_job_id}` },
+      { method: "POST", url: `/v1/status`, body: { request_id: job.higgsfield_job_id } },
     ]
 
     const responses: Record<string, unknown> = {}
-    for (const endpoint of endpoints) {
+    for (const { method, url, body } of attempts) {
+      const key = `${method} ${url}`
       try {
-        const res = await fetch(`${HIGGSFIELD_BASE}${endpoint}`, {
-          headers: { "Authorization": `Key ${HIGGSFIELD_API_KEY}` },
+        const res = await fetch(`${HIGGSFIELD_BASE}${url}`, {
+          method,
+          headers: { "Authorization": `Key ${HIGGSFIELD_API_KEY}`, "Content-Type": "application/json" },
+          ...(body ? { body: JSON.stringify(body) } : {}),
         })
-        responses[endpoint] = { status: res.status, body: await res.json().catch(() => res.text()) }
+        responses[key] = { status: res.status, body: await res.json().catch(() => res.text()) }
       } catch (e) {
-        responses[endpoint] = { error: String(e) }
+        responses[key] = { error: String(e) }
       }
     }
 

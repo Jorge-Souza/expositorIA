@@ -31,10 +31,12 @@ export async function GET(req: NextRequest) {
     return Response.json({ status: "processando", videoUrl: null })
   }
 
-  // Consulta o Higgsfield pelo status do job
+  // Consulta o Higgsfield pelo status do job (requer POST)
   try {
     const res = await fetch(`${HIGGSFIELD_BASE}/v1/generations/${geracao.higgsfield_job_id}`, {
-      headers: { "Authorization": `Key ${HIGGSFIELD_API_KEY}` },
+      method: "POST",
+      headers: { "Authorization": `Key ${HIGGSFIELD_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({}),
     })
 
     if (!res.ok) {
