@@ -42,10 +42,15 @@ export async function GET(req: NextRequest) {
     }
 
     const data = await res.json()
-    const higgsfieldStatus: string = data.status ?? "in_progress"
+    const higgsfieldStatus: string = data.status ?? data.state ?? "unknown"
 
-    if (higgsfieldStatus === "completed") {
-      const videoUrl: string = data.video?.url ?? data.output?.url ?? data.url ?? ""
+    const CONCLUIDO = ["completed", "done", "success", "finished", "ready"]
+    const ERRO = ["failed", "error", "nsfw", "cancelled", "canceled", "rejected"]
+
+    if (CONCLUIDO.includes(higgsfieldStatus)) {
+      const videoUrl: string =
+        data.video?.url ?? data.output?.url ?? data.url ??
+        data.result?.url ?? data.outputs?.[0]?.url ?? ""
       await adminClient
         .from("geracoes")
         .update({ status: "concluido", video_url: videoUrl })
@@ -53,8 +58,8 @@ export async function GET(req: NextRequest) {
       return Response.json({ status: "concluido", videoUrl })
     }
 
-    if (higgsfieldStatus === "failed" || higgsfieldStatus === "nsfw" || higgsfieldStatus === "cancelled") {
-      const erro = data.error ?? `Job ${higgsfieldStatus}`
+    if (ERRO.includes(higgsfieldStatus)) {
+      const erro = data.error ?? data.message ?? `Job ${higgsfieldStatus}`
       await adminClient
         .from("geracoes")
         .update({ status: "erro", erro })
@@ -62,7 +67,8 @@ export async function GET(req: NextRequest) {
       return Response.json({ status: "erro", erro })
     }
 
-    return Response.json({ status: "processando", videoUrl: null })
+    // Retorna status bruto para debug
+    return Response.json({ status: "processando", videoUrl: null, higgsfieldStatus, higgsfieldData: data })
   } catch {
     return Response.json({ status: "processando", videoUrl: null })
   }

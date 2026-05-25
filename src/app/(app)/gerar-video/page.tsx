@@ -57,6 +57,7 @@ export default function GerarVideoPage() {
   const [pollingStatus, setPollingStatus] = useState<"processando" | "concluido" | "erro" | null>(null)
   const [erroMsg, setErroMsg] = useState<string | null>(null)
   const [etapa, setEtapa] = useState<"imagem" | "video" | null>(null)
+  const [higgsfieldStatus, setHiggsfieldStatus] = useState<string | null>(null)
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const [segundos, setSegundos] = useState(0)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -96,6 +97,7 @@ export default function GerarVideoPage() {
           clearInterval(pollRef.current!)
         }
         if (data.etapa) setEtapa(data.etapa)
+        if (data.higgsfieldStatus) setHiggsfieldStatus(data.higgsfieldStatus)
       } catch {}
     }, 4000)
     return () => { if (pollRef.current) clearInterval(pollRef.current) }
@@ -175,7 +177,7 @@ export default function GerarVideoPage() {
   function resetar() {
     setLoading(false); setPollingStatus(null); setVideoId(null)
     setVideoUrl(null); setErroMsg(null); setEtapa(null)
-    setSegundos(0); setState(INITIAL); setStep(0)
+    setSegundos(0); setHiggsfieldStatus(null); setState(INITIAL); setStep(0)
   }
 
   function selecionarModo(modo: Modo) {
@@ -247,6 +249,13 @@ export default function GerarVideoPage() {
               {etapa === "video" && <Loader2 className="h-4 w-4 text-primary animate-spin ml-auto" />}
             </div>
           </div>
+
+          {/* Status Higgsfield debug */}
+          {higgsfieldStatus && (
+            <p className="text-xs text-muted-foreground font-mono">
+              Higgsfield: <span className="text-foreground">{higgsfieldStatus}</span>
+            </p>
+          )}
 
           {/* Barra de progresso baseada em tempo */}
           {(() => {
