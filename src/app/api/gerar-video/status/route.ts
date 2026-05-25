@@ -1,9 +1,9 @@
 import { NextRequest } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { GoogleGenAI } from "@google/genai"
 
-const HIGGSFIELD_API_KEY = process.env.HIGGSFIELD_API_KEY ?? ""
-const HIGGSFIELD_BASE = "https://platform.higgsfield.ai"
+const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY ?? ""
 
 export async function GET(req: NextRequest) {
   const supabase = await createClient()
@@ -15,11 +15,7 @@ export async function GET(req: NextRequest) {
 
   const adminClient = createAdminClient()
   const { data: geracao } = await adminClient
-    .from("geracoes")
-    .select("*")
-    .eq("id", videoId)
-    .eq("user_id", user.id)
-    .single()
+    .from("geracoes").select("*").eq("id", videoId).eq("user_id", user.id).single()
 
   if (!geracao) return Response.json({ error: "Vídeo não encontrado" }, { status: 404 })
 
@@ -31,47 +27,42 @@ export async function GET(req: NextRequest) {
     return Response.json({ status: "processando", videoUrl: null })
   }
 
-  // Consulta o Higgsfield pelo status do job (requer POST)
   try {
-    const res = await fetch(`${HIGGSFIELD_BASE}/v1/generations/${geracao.higgsfield_job_id}`, {
-      method: "POST",
-      headers: { "Authorization": `Key ${HIGGSFIELD_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({}),
-    })
+    const genai = new GoogleGenAI({ apiKey: GOOGLE_API_KEY })
+    const operation = await (genai as any).operations.get({ name: geracao.higgsfield_job_id })
 
-    if (!res.ok) {
-      return Response.json({ status: "processando", videoUrl: null })
+    if (!operation.done) {
+      return Response.json({ status: "processando", videoUrl: null, veoStatus: "running" })
     }
 
-    const data = await res.json()
-    const higgsfieldStatus: string = data.status ?? data.state ?? "unknown"
+    // Operação concluída — extrai URL do vídeo
+    const generatedVideos = operation.response?.generatedVideos ?? operation.result?.generatedVideos ?? []
+    const videoUri: string = generatedVideos[0]?.video?.uri ?? generatedVideos[0]?.uri ?? ""
 
-    const CONCLUIDO = ["completed", "done", "success", "finished", "ready"]
-    const ERRO = ["failed", "error", "nsfw", "cancelled", "canceled", "rejected"]
-
-    if (CONCLUIDO.includes(higgsfieldStatus)) {
-      const videoUrl: string =
-        data.video?.url ?? data.output?.url ?? data.url ??
-        data.result?.url ?? data.outputs?.[0]?.url ?? ""
-      await adminClient
-        .from("geracoes")
-        .update({ status: "concluido", video_url: videoUrl })
-        .eq("id", videoId)
-      return Response.json({ status: "concluido", videoUrl })
-    }
-
-    if (ERRO.includes(higgsfieldStatus)) {
-      const erro = data.error ?? data.message ?? `Job ${higgsfieldStatus}`
-      await adminClient
-        .from("geracoes")
-        .update({ status: "erro", erro })
-        .eq("id", videoId)
+    if (!videoUri) {
+      const erro = operation.error?.message ?? "Veo não retornou vídeo"
+      await adminClient.from("geracoes").update({ status: "erro", erro }).eq("id", videoId)
       return Response.json({ status: "erro", erro })
     }
 
-    // Retorna status bruto para debug
-    return Response.json({ status: "processando", videoUrl: null, higgsfieldStatus, higgsfieldData: data })
-  } catch {
-    return Response.json({ status: "processando", videoUrl: null })
+    // Faz download do vídeo e armazena no Supabase
+    const videoResp = await fetch(videoUri, {
+      headers: GOOGLE_API_KEY ? { "Authorization": `Bearer ${GOOGLE_API_KEY}` } : {},
+    })
+
+    let videoUrl = videoUri
+    if (videoResp.ok && videoResp.headers.get("content-type")?.includes("video")) {
+      const videoBuffer = Buffer.from(await videoResp.arrayBuffer())
+      const videoPath = `${geracao.user_id}/video_final_${videoId}.mp4`
+      await adminClient.storage.from("produtos").upload(videoPath, videoBuffer, { contentType: "video/mp4", upsert: true })
+      const { data: { publicUrl } } = adminClient.storage.from("produtos").getPublicUrl(videoPath)
+      videoUrl = publicUrl
+    }
+
+    await adminClient.from("geracoes").update({ status: "concluido", video_url: videoUrl }).eq("id", videoId)
+    return Response.json({ status: "concluido", videoUrl })
+  } catch (err) {
+    const erro = err instanceof Error ? err.message : String(err)
+    return Response.json({ status: "processando", videoUrl: null, veoStatus: "checking", erro })
   }
 }

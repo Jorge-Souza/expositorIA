@@ -117,6 +117,7 @@ export default function GerarVideoPage() {
     form.append("imagem", state.imagem)
     form.append("modo", state.modo)
     form.append("motionId", state.movimento.motionId)
+    form.append("movimentoId", state.movimento.id)
     form.append("movimentoLabel", state.movimento.label)
     form.append("aspecto", state.aspecto)
     form.append("duracao", String(state.duracao))

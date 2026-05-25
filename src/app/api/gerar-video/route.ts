@@ -17,6 +17,7 @@ export async function POST(req: NextRequest) {
   const modeloDescricao = (formData.get("modeloDescricao") as string) || ""
   const modeloLabel    = (formData.get("modeloLabel") as string) || ""
   const motionId       = (formData.get("motionId") as string) || ""
+  const movimentoId    = (formData.get("movimentoId") as string) || ""
   const movimentoLabel = (formData.get("movimentoLabel") as string) || ""
   const aspecto        = (formData.get("aspecto") as string) || "9:16"
   const duracao        = Number(formData.get("duracao") ?? "5")
@@ -65,7 +66,7 @@ export async function POST(req: NextRequest) {
 
   // Salva os parâmetros no registro para a rota /processar usar
   await adminClient.from("geracoes").update({
-    erro: JSON.stringify({ modo, modeloDescricao, motionId, movimentoLabel, aspecto, duracao }),
+    erro: JSON.stringify({ modo, modeloDescricao, motionId, movimentoId, movimentoLabel, aspecto, duracao }),
   }).eq("id", geracao.id)
 
   return Response.json({ videoId: geracao.id, imagemOriginalUrl })
