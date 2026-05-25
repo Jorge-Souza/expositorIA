@@ -16,11 +16,11 @@ export async function GET(req: NextRequest) {
   )
   const data = await res.json()
 
-  const modelos = (data.models ?? [])
-    .filter((m: { supportedGenerationMethods?: string[] }) =>
-      m.supportedGenerationMethods?.includes("generateContent")
-    )
-    .map((m: { name: string; displayName?: string }) => ({ name: m.name, displayName: m.displayName }))
+  const modelos = (data.models ?? []).map((m: { name: string; displayName?: string; supportedGenerationMethods?: string[] }) => ({
+    name: m.name,
+    displayName: m.displayName,
+    methods: m.supportedGenerationMethods,
+  }))
 
-  return Response.json({ total: modelos.length, modelos })
+  return Response.json({ status: res.status, total: modelos.length, modelos, raw_error: data.error ?? null })
 }
