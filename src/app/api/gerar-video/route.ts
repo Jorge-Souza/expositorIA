@@ -30,7 +30,7 @@ The model is wearing or using the product shown in the uploaded image.
 - Ready for TikTok Shop Brazil`
 
   const response = await genai.models.generateContent({
-    model: "gemini-2.0-flash-preview-image-generation",
+    model: "gemini-2.0-flash-exp",
     contents: [{
       role: "user",
       parts: [
