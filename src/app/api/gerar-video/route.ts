@@ -94,6 +94,7 @@ export async function POST(req: NextRequest) {
 
   const formData = await req.formData()
   const imagem          = formData.get("imagem") as File | null
+  const modo            = (formData.get("modo") as string) || "foco"
   const modeloDescricao = (formData.get("modeloDescricao") as string) || ""
   const modeloLabel     = (formData.get("modeloLabel") as string) || ""
   const motionId        = (formData.get("motionId") as string) || ""
@@ -118,6 +119,9 @@ export async function POST(req: NextRequest) {
   await adminClient.storage.from("produtos").upload(originalPath, buffer, { contentType: imagem.type, upsert: false })
   const { data: { publicUrl: imagemOriginalUrl } } = adminClient.storage.from("produtos").getPublicUrl(originalPath)
 
+  const tipoLabel = modo === "foco" ? "Foco no Produto" : modo === "feminino" ? "Modelo Feminina" : "Modelo Masculino"
+  const estiloLabel = modeloLabel ? `${tipoLabel} · ${modeloLabel} · ${movimentoLabel} · ${aspecto}` : `${tipoLabel} · ${movimentoLabel} · ${aspecto}`
+
   // Cria registro na tabela geracoes
   const { data: geracao, error: geracaoError } = await adminClient
     .from("geracoes")
@@ -125,7 +129,7 @@ export async function POST(req: NextRequest) {
       user_id: user.id,
       imagem_original_url: imagemOriginalUrl,
       imagens_geradas: [],
-      estilo: `Vídeo · ${modeloLabel} · ${movimentoLabel} · ${aspecto}`,
+      estilo: `Vídeo · ${estiloLabel}`,
       quantidade: 1,
       creditos_usados: CREDITOS_POR_VIDEO,
       status: "processando",
@@ -141,25 +145,31 @@ export async function POST(req: NextRequest) {
   // Debita créditos
   await adminClient.from("profiles").update({ credits: profile.credits - CREDITOS_POR_VIDEO }).eq("id", user.id)
 
-  // Pipeline: Gemini → Higgsfield (assíncrono)
+  // Pipeline assíncrono
   ;(async () => {
     try {
-      // Etapa 1: Gemini gera imagem modelo + produto
-      const imagemGeradaBuffer = await gerarImagemComGemini({
-        produtoBuffer: buffer,
-        produtoMime: imagem.type,
-        modeloDescricao,
-        aspecto,
-      })
+      let imageUrlParaVideo: string
 
-      // Upload da imagem gerada pelo Gemini
-      const geradaPath = `${user.id}/video_gemini_${geracao.id}.jpg`
-      await adminClient.storage.from("produtos").upload(geradaPath, imagemGeradaBuffer, { contentType: "image/jpeg", upsert: true })
-      const { data: { publicUrl: imagemGeradaUrl } } = adminClient.storage.from("produtos").getPublicUrl(geradaPath)
+      if (modo === "foco") {
+        // Foco no produto: manda direto sem Gemini
+        imageUrlParaVideo = imagemOriginalUrl
+      } else {
+        // Com modelo: Gemini gera imagem modelo + produto
+        const imagemGeradaBuffer = await gerarImagemComGemini({
+          produtoBuffer: buffer,
+          produtoMime: imagem.type,
+          modeloDescricao,
+          aspecto,
+        })
+        const geradaPath = `${user.id}/video_gemini_${geracao.id}.jpg`
+        await adminClient.storage.from("produtos").upload(geradaPath, imagemGeradaBuffer, { contentType: "image/jpeg", upsert: true })
+        const { data: { publicUrl } } = adminClient.storage.from("produtos").getPublicUrl(geradaPath)
+        imageUrlParaVideo = publicUrl
+      }
 
-      // Etapa 2: Higgsfield anima a imagem
+      // Higgsfield anima a imagem
       const jobId = await submitHiggsfieldJob({
-        imageUrl: imagemGeradaUrl,
+        imageUrl: imageUrlParaVideo,
         motionId,
         movimentoLabel,
         aspectRatio: aspecto,
