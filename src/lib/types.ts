@@ -132,6 +132,42 @@ export type ModeloVideo = "dop-lite" | "dop-standard"
 export type AspectRatioVideo = "9:16" | "1:1" | "4:5" | "16:9"
 export type DuracaoVideo = 5 | 10
 
+export interface ModeloInspiracao {
+  id: string
+  label: string
+  genero: "feminino" | "masculino"
+  descricao: string
+  foto: string
+}
+
+export interface MovimentoVideo {
+  id: string
+  label: string
+  desc: string
+  motionId: string
+}
+
+export const MODELOS_INSPIRACAO: ModeloInspiracao[] = [
+  { id: "f1", genero: "feminino", label: "Casual Chic",    descricao: "young Brazilian woman, casual chic style, natural makeup, confident pose",           foto: "/modelos/feminino-1.jpg" },
+  { id: "f2", genero: "feminino", label: "Editorial",      descricao: "Brazilian woman, editorial fashion look, bold makeup, high fashion pose",             foto: "/modelos/feminino-2.jpg" },
+  { id: "f3", genero: "feminino", label: "Street Style",   descricao: "young Brazilian woman, street style urban fashion, trendy look",                      foto: "/modelos/feminino-3.jpg" },
+  { id: "f4", genero: "feminino", label: "Elegante",       descricao: "Brazilian woman, elegant and sophisticated style, graceful posture",                   foto: "/modelos/feminino-4.jpg" },
+  { id: "f5", genero: "feminino", label: "Esportiva",      descricao: "young Brazilian woman, sporty active style, athletic and energetic look",              foto: "/modelos/feminino-5.jpg" },
+  { id: "m1", genero: "masculino", label: "Casual Cool",   descricao: "young Brazilian man, casual cool style, relaxed confident look",                       foto: "/modelos/masculino-1.jpg" },
+  { id: "m2", genero: "masculino", label: "Executivo",     descricao: "Brazilian man, executive business style, sharp and professional look",                 foto: "/modelos/masculino-2.jpg" },
+  { id: "m3", genero: "masculino", label: "Street Style",  descricao: "young Brazilian man, street style urban fashion, modern trendy look",                  foto: "/modelos/masculino-3.jpg" },
+  { id: "m4", genero: "masculino", label: "Esportivo",     descricao: "young Brazilian man, sporty athletic style, fit and energetic look",                   foto: "/modelos/masculino-4.jpg" },
+  { id: "m5", genero: "masculino", label: "Fashion",       descricao: "Brazilian man, high fashion editorial style, bold and stylish look",                   foto: "/modelos/masculino-5.jpg" },
+]
+
+export const MOVIMENTOS_VIDEO: MovimentoVideo[] = [
+  { id: "catwalk",   label: "Passarela",      desc: "Modelo caminha como em um desfile de moda",       motionId: "0e339850-d8f1-4c9d-be3a-97fc2cdb628e" },
+  { id: "orbit",     label: "Órbita 360°",    desc: "Câmera circula ao redor do look completo",         motionId: "ea035f68-b350-40f1-b7f4-7dff999fdd67" },
+  { id: "glam",      label: "Glamour",        desc: "Movimento glamouroso estilo editorial de moda",    motionId: "a2046ff7-26fc-4d97-aab7-54bbb55fca97" },
+  { id: "dolly",     label: "Zoom no produto",desc: "Aproximação cinematográfica no produto",           motionId: "81ca2cd2-05db-4222-9ba0-a32e5185adfb" },
+  { id: "paparazzi", label: "Paparazzi",      desc: "Flash de paparazzi, estilo celebridade",          motionId: "556ab276-23b1-4604-a501-2513a71e2eea" },
+]
+
 export interface VideoGerado {
   id: string
   user_id: string
