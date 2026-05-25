@@ -16,7 +16,7 @@ async function gerarImagemComGemini(params: {
   modeloDescricao: string
   aspecto: string
 }): Promise<Buffer> {
-  const genai = new GoogleGenAI({ apiKey: GOOGLE_API_KEY })
+  const genai = new GoogleGenAI({ apiKey: GOOGLE_API_KEY, apiVersion: "v1alpha" })
   const imageBase64 = params.produtoBuffer.toString("base64")
 
   const prompt = `Professional fashion e-commerce photo for TikTok Shop Brazil.
