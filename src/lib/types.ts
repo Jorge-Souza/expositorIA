@@ -20,6 +20,9 @@ export interface Geracao {
   status: GeracaoStatus
   erro: string | null
   created_at: string
+  tipo?: "imagem" | "video"
+  video_url?: string | null
+  higgsfield_job_id?: string | null
 }
 
 export interface PackCredito {
