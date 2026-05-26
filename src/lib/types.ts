@@ -168,20 +168,20 @@ export interface MovimentoVideo {
 }
 
 export const MODELOS_INSPIRACAO: ModeloInspiracao[] = [
-  { id: "f1", genero: "feminino", label: "Estilo 1", descricao: "young Brazilian woman, casual chic style, natural makeup, confident pose",        foto: "/referencias/feminino-1.jpg" },
-  { id: "f2", genero: "feminino", label: "Estilo 2", descricao: "Brazilian woman, editorial fashion look, bold makeup, high fashion pose",          foto: "/referencias/feminino-2.jpg" },
-  { id: "f3", genero: "feminino", label: "Estilo 3", descricao: "young Brazilian woman, street style urban fashion, trendy look",                   foto: "/referencias/feminio-3.jpg" },
-  { id: "f4", genero: "feminino", label: "Estilo 4", descricao: "Brazilian woman, elegant and sophisticated style, graceful posture",                foto: "/referencias/feminino-4.jpg" },
-  { id: "f5", genero: "feminino", label: "Estilo 5", descricao: "young Brazilian woman, sporty active style, athletic and energetic look",           foto: "/referencias/feminino-5.jpg" },
-  { id: "f6", genero: "feminino", label: "Estilo 6", descricao: "Brazilian woman, glamorous style, confident and elegant look",                     foto: "/referencias/feminino-6.jpg" },
-  { id: "f7", genero: "feminino", label: "Estilo 7", descricao: "young Brazilian woman, modern lifestyle style, fresh and vibrant look",             foto: "/referencias/feminino-7.jpg" },
-  { id: "m1", genero: "masculino", label: "Estilo 1", descricao: "young Brazilian man, casual cool style, relaxed confident look",                  foto: "/referencias/masculino-1.jpg" },
-  { id: "m2", genero: "masculino", label: "Estilo 2", descricao: "Brazilian man, executive business style, sharp and professional look",            foto: "/referencias/masculino-2.jpg" },
-  { id: "m3", genero: "masculino", label: "Estilo 3", descricao: "young Brazilian man, street style urban fashion, modern trendy look",             foto: "/referencias/masculino-3.jpg" },
-  { id: "m4", genero: "masculino", label: "Estilo 4", descricao: "young Brazilian man, sporty athletic style, fit and energetic look",              foto: "/referencias/masculino-4.jpg" },
-  { id: "m5", genero: "masculino", label: "Estilo 5", descricao: "Brazilian man, high fashion editorial style, bold and stylish look",              foto: "/referencias/masculino-5.jpg" },
-  { id: "m6", genero: "masculino", label: "Estilo 6", descricao: "Brazilian man, relaxed lifestyle style, approachable and confident look",         foto: "/referencias/masculino-6.jpg" },
-  { id: "m7", genero: "masculino", label: "Estilo 7", descricao: "young Brazilian man, urban modern style, dynamic and energetic look",             foto: "/referencias/masculino-7.jpg" },
+  { id: "f1", genero: "feminino", label: "Estilo 1", descricao: "female fashion model, casual chic style, natural makeup, confident pose",          foto: "/referencias/feminino-1.jpg" },
+  { id: "f2", genero: "feminino", label: "Estilo 2", descricao: "female fashion model, editorial fashion look, bold makeup, high fashion pose",      foto: "/referencias/feminino-2.jpg" },
+  { id: "f3", genero: "feminino", label: "Estilo 3", descricao: "female fashion model, street style urban fashion, trendy look",                     foto: "/referencias/feminio-3.jpg" },
+  { id: "f4", genero: "feminino", label: "Estilo 4", descricao: "female fashion model, elegant and sophisticated style, graceful posture",            foto: "/referencias/feminino-4.jpg" },
+  { id: "f5", genero: "feminino", label: "Estilo 5", descricao: "female fashion model, sporty active style, athletic and energetic look",             foto: "/referencias/feminino-5.jpg" },
+  { id: "f6", genero: "feminino", label: "Estilo 6", descricao: "female fashion model, glamorous style, confident and elegant look",                  foto: "/referencias/feminino-6.jpg" },
+  { id: "f7", genero: "feminino", label: "Estilo 7", descricao: "female fashion model, modern lifestyle style, fresh and vibrant look",               foto: "/referencias/feminino-7.jpg" },
+  { id: "m1", genero: "masculino", label: "Estilo 1", descricao: "male fashion model, casual cool style, relaxed confident look",                    foto: "/referencias/masculino-1.jpg" },
+  { id: "m2", genero: "masculino", label: "Estilo 2", descricao: "male fashion model, executive business style, sharp and professional look",         foto: "/referencias/masculino-2.jpg" },
+  { id: "m3", genero: "masculino", label: "Estilo 3", descricao: "male fashion model, street style urban fashion, modern trendy look",                foto: "/referencias/masculino-3.jpg" },
+  { id: "m4", genero: "masculino", label: "Estilo 4", descricao: "male fashion model, sporty athletic style, fit and energetic look",                 foto: "/referencias/masculino-4.jpg" },
+  { id: "m5", genero: "masculino", label: "Estilo 5", descricao: "male fashion model, high fashion editorial style, bold and stylish look",           foto: "/referencias/masculino-5.jpg" },
+  { id: "m6", genero: "masculino", label: "Estilo 6", descricao: "male fashion model, relaxed lifestyle style, approachable and confident look",      foto: "/referencias/masculino-6.jpg" },
+  { id: "m7", genero: "masculino", label: "Estilo 7", descricao: "male fashion model, urban modern style, dynamic and energetic look",                foto: "/referencias/masculino-7.jpg" },
 ]
 
 export const MOVIMENTOS_VIDEO: MovimentoVideo[] = [

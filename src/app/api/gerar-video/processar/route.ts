@@ -27,14 +27,14 @@ async function gerarImagemComGemini(params: {
   const imageBase64 = produtoBuffer.toString("base64")
   const mimeType = resp.headers.get("content-type") ?? "image/jpeg"
 
-  const prompt = `Professional fashion e-commerce photo for TikTok Shop Brazil.
-Create a photorealistic image of: ${params.modeloDescricao}
-The model is wearing or using the product shown in the uploaded image.
+  const prompt = `Fashion e-commerce product photo for social media.
+Style: ${params.modeloDescricao}
+The product shown in the uploaded image is being worn or held by the model.
 - Keep the product EXACTLY as it appears — same colors, shape, details
-- Natural, confident, aspirational pose perfect for social commerce
+- Natural, confident pose suitable for e-commerce
 - Clean, professional studio or lifestyle background
-- ${params.aspecto} aspect ratio composition
-- High-quality photorealistic commercial photograph`
+- ${params.aspecto} aspect ratio
+- Commercial product photography style`
 
   const response = await genai.models.generateContent({
     model: "gemini-2.5-flash-image",
