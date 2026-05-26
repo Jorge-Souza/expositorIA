@@ -50,8 +50,8 @@ export async function GET(req: NextRequest) {
     }
 
     // Extrai URI do vídeo gerado
-    const generatedVideos = operation.response?.generatedVideos ?? []
-    const videoUri: string = generatedVideos[0]?.video?.uri ?? generatedVideos[0]?.uri ?? ""
+    const generatedSamples = operation.response?.generateVideoResponse?.generatedSamples ?? []
+    const videoUri: string = generatedSamples[0]?.video?.uri ?? ""
 
     if (!videoUri) {
       const erro = "Veo concluiu mas não retornou vídeo: " + JSON.stringify(operation.response)
@@ -62,7 +62,8 @@ export async function GET(req: NextRequest) {
     // Tenta baixar e armazenar no Supabase
     let videoUrl = videoUri
     try {
-      const videoResp = await fetch(videoUri)
+      const downloadUrl = videoUri.includes("key=") ? videoUri : `${videoUri}${videoUri.includes("?") ? "&" : "?"}key=${GOOGLE_API_KEY}`
+      const videoResp = await fetch(downloadUrl)
       if (videoResp.ok) {
         const videoBuffer = Buffer.from(await videoResp.arrayBuffer())
         const videoPath = `${geracao.user_id}/video_final_${videoId}.mp4`
