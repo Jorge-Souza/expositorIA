@@ -7,14 +7,7 @@ export default function LandingPage() {
     <div className="min-h-screen flex flex-col">
       {/* Header */}
       <header className="border-b border-border px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center">
-            <span className="text-white text-sm font-bold">E</span>
-          </div>
-          <span className="text-lg font-bold">
-            expositor<span className="text-primary">IA</span>
-          </span>
-        </div>
+        <img src="/logo-expositorIA.png" alt="expositorIA" className="h-10 w-auto object-contain" />
         <div className="flex items-center gap-3">
           <Button asChild variant="ghost" size="sm">
             <Link href="/login">Entrar</Link>

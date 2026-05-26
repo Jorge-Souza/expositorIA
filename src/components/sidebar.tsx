@@ -37,15 +37,8 @@ export function Sidebar({ credits, nomeUsuario, email }: SidebarProps) {
   return (
     <aside className="w-60 shrink-0 flex flex-col h-screen sticky top-0 border-r border-border bg-card">
       {/* Logo */}
-      <div className="p-5 border-b border-border">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center shrink-0">
-            <span className="text-white text-sm font-bold">E</span>
-          </div>
-          <span className="text-base font-bold">
-            expositor<span className="text-primary">IA</span>
-          </span>
-        </div>
+      <div className="px-4 py-3 border-b border-border flex items-center justify-center">
+        <img src="/logo-expositorIA.png" alt="expositorIA" className="h-10 w-auto object-contain" />
       </div>
 
       {/* Nav */}
