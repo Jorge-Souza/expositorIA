@@ -290,7 +290,7 @@ export default function GerarVideoPage() {
     : []
 
   return (
-    <div className="pb-24 space-y-8 max-w-2xl">
+    <div className="pb-36 md:pb-24 space-y-8 max-w-2xl">
       <div>
         <div className="flex items-center gap-3">
           <h1 className="text-2xl font-bold">Gerar Vídeo com IA</h1>
@@ -332,22 +332,22 @@ export default function GerarVideoPage() {
       {/* 2. Modo */}
       <section className="space-y-3">
         <h2 className="font-semibold">Tipo de vídeo <span className="text-destructive">*</span></h2>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-3 gap-2 sm:gap-3">
           {([
-            { id: "feminino" as Modo, icon: User,    label: "Modelo Feminina", desc: "Produto usado por modelo feminina" },
-            { id: "masculino" as Modo, icon: Users,  label: "Modelo Masculino", desc: "Produto usado por modelo masculino" },
-            { id: "foco" as Modo,     icon: Package, label: "Foco no Produto",  desc: "Sem personagem, só o produto" },
+            { id: "feminino" as Modo, icon: User,    label: "Feminina", desc: "Modelo feminina usando o produto" },
+            { id: "masculino" as Modo, icon: Users,  label: "Masculino", desc: "Modelo masculino usando o produto" },
+            { id: "foco" as Modo,     icon: Package, label: "Produto",  desc: "Sem personagem, só o produto" },
           ]).map(({ id, icon: Icon, label, desc }) => (
             <button key={id} onClick={() => selecionarModo(id)}
-              className={cn("flex flex-col items-center gap-3 p-5 rounded-2xl border-2 transition-all text-center",
+              className={cn("flex flex-col items-center gap-2 p-3 sm:p-5 rounded-2xl border-2 transition-all text-center",
                 state.modo === id ? "border-primary bg-primary/5" : "border-border hover:border-primary/40 hover:bg-accent")}>
-              <div className={cn("w-11 h-11 rounded-xl flex items-center justify-center",
+              <div className={cn("w-9 h-9 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center",
                 state.modo === id ? "bg-primary/10" : "bg-muted")}>
-                <Icon className={cn("h-6 w-6", state.modo === id ? "text-primary" : "text-muted-foreground")} />
+                <Icon className={cn("h-5 w-5 sm:h-6 sm:w-6", state.modo === id ? "text-primary" : "text-muted-foreground")} />
               </div>
               <div>
-                <p className={cn("font-semibold text-sm", state.modo === id ? "text-primary" : "")}>{label}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{desc}</p>
+                <p className={cn("font-semibold text-xs sm:text-sm leading-tight", state.modo === id ? "text-primary" : "")}>{label}</p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 hidden sm:block">{desc}</p>
               </div>
             </button>
           ))}
