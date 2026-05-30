@@ -44,8 +44,8 @@ export function Sidebar({ credits, nomeUsuario, email }: SidebarProps) {
       {/* Sidebar — desktop */}
       <aside className="hidden md:flex w-60 shrink-0 flex-col h-screen sticky top-0 border-r border-border bg-card">
         {/* Logo */}
-        <div className="px-4 py-3 border-b border-border flex items-center justify-center">
-          <img src="/logo-expositorIA.png" alt="expositorIA" className="h-10 w-auto object-contain" />
+        <div className="px-4 py-4 border-b border-border flex items-center justify-center">
+          <span className="text-lg font-bold tracking-tight">expositorIA</span>
         </div>
 
         {/* Nav */}
@@ -125,7 +125,7 @@ export function Sidebar({ credits, nomeUsuario, email }: SidebarProps) {
 
       {/* Top bar — mobile */}
       <header className="md:hidden fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-4 py-2 border-b border-border bg-card">
-        <img src="/logo-expositorIA.png" alt="expositorIA" className="h-8 w-auto object-contain" />
+        <span className="text-base font-bold tracking-tight">expositorIA</span>
         <div className="flex items-center gap-3">
           <Link href="/creditos" className="flex items-center gap-1 text-sm font-medium text-primary">
             <Coins className="h-4 w-4" />
