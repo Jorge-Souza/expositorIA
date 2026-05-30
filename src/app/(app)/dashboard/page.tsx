@@ -33,6 +33,7 @@ export default async function DashboardPage() {
   ).slice(0, 6)
 
   const primeiroNome = p?.nome?.split(" ")[0] ?? "Seller"
+  const isAdmin = user.email === "jorge.expdigital@gmail.com"
 
   return (
     <div className="space-y-8">
@@ -72,7 +73,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* CTAs */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className={`grid gap-4 ${isAdmin ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"}`}>
         <Link href="/gerar" className="group relative overflow-hidden rounded-2xl border border-violet-500/30 bg-gradient-to-br from-violet-600/20 to-purple-700/20 p-6 hover:border-violet-500/60 hover:from-violet-600/30 hover:to-purple-700/30 transition-all">
           <div className="absolute top-4 right-4 w-10 h-10 rounded-xl bg-violet-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
             <Sparkles className="h-5 w-5 text-violet-400" />
@@ -85,17 +86,19 @@ export default async function DashboardPage() {
           </span>
         </Link>
 
-        <Link href="/gerar-video" className="group relative overflow-hidden rounded-2xl border border-cyan-500/30 bg-gradient-to-br from-cyan-600/20 to-teal-700/20 p-6 hover:border-cyan-500/60 hover:from-cyan-600/30 hover:to-teal-700/30 transition-all">
-          <div className="absolute top-4 right-4 w-10 h-10 rounded-xl bg-cyan-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-            <Video className="h-5 w-5 text-cyan-400" />
-          </div>
-          <p className="text-xs text-cyan-400 font-semibold uppercase tracking-wider mb-2">Vídeos com IA</p>
-          <h2 className="text-xl font-bold mb-1">Gerar Vídeos</h2>
-          <p className="text-sm text-muted-foreground mb-4">Vídeos animados para TikTok e Reels</p>
-          <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-cyan-400 group-hover:gap-2.5 transition-all">
-            Criar agora <ArrowRight className="h-4 w-4" />
-          </span>
-        </Link>
+        {isAdmin && (
+          <Link href="/gerar-video" className="group relative overflow-hidden rounded-2xl border border-cyan-500/30 bg-gradient-to-br from-cyan-600/20 to-teal-700/20 p-6 hover:border-cyan-500/60 hover:from-cyan-600/30 hover:to-teal-700/30 transition-all">
+            <div className="absolute top-4 right-4 w-10 h-10 rounded-xl bg-cyan-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <Video className="h-5 w-5 text-cyan-400" />
+            </div>
+            <p className="text-xs text-cyan-400 font-semibold uppercase tracking-wider mb-2">Vídeos com IA</p>
+            <h2 className="text-xl font-bold mb-1">Gerar Vídeos</h2>
+            <p className="text-sm text-muted-foreground mb-4">Vídeos animados para TikTok e Reels</p>
+            <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-cyan-400 group-hover:gap-2.5 transition-all">
+              Criar agora <ArrowRight className="h-4 w-4" />
+            </span>
+          </Link>
+        )}
       </div>
 
       {/* Créditos zerados */}

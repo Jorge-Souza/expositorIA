@@ -26,6 +26,12 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
+@layer utilities {
+  .pb-safe {
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+  }
+}
+
 :root {
   --radius: 0.625rem;
   --background: #09090b;

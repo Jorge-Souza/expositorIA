@@ -46,7 +46,7 @@ export default async function CreditosPage() {
             <Zap className="h-4 w-4 text-primary" />
             <p className="font-medium text-sm">Como funciona</p>
           </div>
-          <div className="grid grid-cols-3 gap-4 text-center">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center">
             {[
               { n: "3", label: "créditos para gerar 3 imagens" },
               { n: "5", label: "créditos para gerar 5 imagens" },

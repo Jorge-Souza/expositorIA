@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import {
   Box, Users, Trees, ImageIcon, X,
-  Zap, Monitor, Sparkles, Check, Loader2, Coins,
+  Zap, Monitor, Sparkles, Check, Loader2, Coins, Download, ArrowLeft,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -176,11 +176,15 @@ export default function GerarPage() {
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {gerandoImagens.map((url, i) => (
-          <div key={i} className="relative group rounded-2xl overflow-hidden border border-border">
-            <img src={url} alt={`Imagem ${i + 1}`} className="w-full aspect-square object-cover" />
-            <a href={url} download={`expositorIA_${i + 1}.jpg`}
-              className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-sm font-medium">
-              Baixar
+          <div key={i} className="flex flex-col gap-2">
+            <div className="rounded-2xl overflow-hidden border border-border">
+              <img src={url} alt={`Imagem ${i + 1}`} className="w-full aspect-square object-cover" />
+            </div>
+            <a href={url} download={`expositorIA_${i + 1}.jpg`}>
+              <Button variant="outline" className="w-full gap-2">
+                <Download className="h-4 w-4" />
+                Baixar
+              </Button>
             </a>
           </div>
         ))}
@@ -202,7 +206,8 @@ export default function GerarPage() {
       {!loading && (
         <div className="flex gap-3 justify-center">
           <Button variant="outline" onClick={() => { setGerandoImagens([]); setGerandoErros([]); setState(INITIAL) }}>
-            Gerar novamente
+            <ArrowLeft className="h-4 w-4" />
+            Voltar
           </Button>
           <Button variant="gradient" onClick={() => router.push("/historico")}>
             Ver histórico
@@ -252,18 +257,18 @@ export default function GerarPage() {
       {/* 2. Estilo */}
       <section className="space-y-3">
         <h2 className="font-semibold">Estilo da foto <span className="text-destructive">*</span></h2>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-3 gap-2 sm:gap-3">
           {ESTILOS_FOTO.map(({ id, icon: Icon, label, desc }) => (
             <button key={id} onClick={() => set("estilo", id)}
-              className={cn("flex flex-col items-center gap-3 p-5 rounded-2xl border-2 text-center transition-all",
+              className={cn("flex flex-col items-center gap-2 p-3 sm:p-5 rounded-2xl border-2 text-center transition-all",
                 state.estilo === id ? "border-primary bg-primary/5" : "border-border hover:border-primary/40 hover:bg-accent")}>
-              <div className={cn("w-11 h-11 rounded-xl flex items-center justify-center",
+              <div className={cn("w-9 h-9 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center",
                 state.estilo === id ? "bg-primary/10" : "bg-muted")}>
-                <Icon className={cn("h-6 w-6", state.estilo === id ? "text-primary" : "text-muted-foreground")} />
+                <Icon className={cn("h-5 w-5 sm:h-6 sm:w-6", state.estilo === id ? "text-primary" : "text-muted-foreground")} />
               </div>
               <div>
-                <p className={cn("font-semibold text-sm", state.estilo === id ? "text-primary" : "")}>{label}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{desc}</p>
+                <p className={cn("font-semibold text-xs sm:text-sm leading-tight", state.estilo === id ? "text-primary" : "")}>{label}</p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 hidden sm:block">{desc}</p>
               </div>
             </button>
           ))}
@@ -336,19 +341,19 @@ export default function GerarPage() {
           <h2 className="font-semibold">Qualidade</h2>
           <p className="text-sm text-muted-foreground">Resoluções maiores consomem mais créditos</p>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-3 gap-2 sm:gap-3">
           {QUALIDADES.map(({ id, icon: Icon, label, desc }) => {
             const custo = CREDITOS_TABELA[id][state.quantidade]
             return (
               <button key={id} onClick={() => set("qualidade", id)}
-                className={cn("relative flex flex-col gap-2 p-4 rounded-xl border-2 text-left transition-all",
+                className={cn("relative flex flex-col gap-1.5 p-3 sm:p-4 rounded-xl border-2 text-left transition-all",
                   state.qualidade === id ? "border-primary bg-primary/5" : "border-border hover:border-primary/40 hover:bg-accent")}>
                 <div className="flex items-center justify-between">
-                  <Icon className={cn("h-5 w-5", state.qualidade === id ? "text-primary" : "text-muted-foreground")} />
-                  <span className="text-xs font-medium text-muted-foreground">{custo} créditos</span>
+                  <Icon className={cn("h-4 w-4 sm:h-5 sm:w-5", state.qualidade === id ? "text-primary" : "text-muted-foreground")} />
+                  <span className="text-[10px] sm:text-xs font-medium text-muted-foreground">{custo} cr.</span>
                 </div>
-                <span className={cn("font-semibold text-sm", state.qualidade === id ? "text-primary" : "")}>{label}</span>
-                <span className="text-xs text-muted-foreground">{desc}</span>
+                <span className={cn("font-semibold text-xs sm:text-sm leading-tight", state.qualidade === id ? "text-primary" : "")}>{label}</span>
+                <span className="text-[10px] sm:text-xs text-muted-foreground hidden sm:block">{desc}</span>
               </button>
             )
           })}
@@ -485,17 +490,16 @@ export default function GerarPage() {
       </section>
 
       {/* Bottom bar fixo */}
-      <div className="fixed bottom-0 left-60 right-0 border-t border-border bg-card/95 backdrop-blur px-6 py-3 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-2 text-sm">
-          <Coins className="h-4 w-4 text-yellow-400" />
-          <span className="text-muted-foreground">Custo:</span>
-          <span className="font-semibold">{creditos} créditos</span>
-          <span className="text-muted-foreground">· {state.quantidade} imagem(ns)</span>
+      <div className="fixed bottom-0 left-0 md:left-60 right-0 border-t border-border bg-card/95 backdrop-blur px-4 md:px-6 py-3 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-1.5 text-sm min-w-0">
+          <Coins className="h-4 w-4 text-yellow-400 shrink-0" />
+          <span className="font-semibold shrink-0">{creditos} cr.</span>
+          <span className="text-muted-foreground truncate hidden sm:inline">· {state.quantidade} imagem(ns)</span>
         </div>
-        <Button variant="gradient" size="lg" disabled={loading || !canGerar} onClick={handleGerar}>
+        <Button variant="gradient" size="lg" disabled={loading || !canGerar} onClick={handleGerar} className="shrink-0">
           {loading
             ? <><Loader2 className="h-4 w-4 animate-spin" /> Gerando...</>
-            : <><Sparkles className="h-4 w-4" /> Gerar {state.quantidade} imagem(ns)</>}
+            : <><Sparkles className="h-4 w-4" /> Gerar {state.quantidade} img</>}
         </Button>
       </div>
     </div>

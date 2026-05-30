@@ -41,43 +41,43 @@ export default async function HistoricoPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold">Histórico</h1>
           <p className="text-muted-foreground text-sm">{lista.length} geração{lista.length !== 1 ? "ões" : ""} realizadas</p>
         </div>
         <div className="flex gap-2">
-          <Button asChild variant="gradient" size="sm">
+          <Button asChild variant="gradient" size="sm" className="flex-1 sm:flex-none">
             <Link href="/gerar"><Sparkles className="h-4 w-4" /> Nova imagem</Link>
           </Button>
-          <Button asChild size="sm" className="bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/20">
+          <Button asChild size="sm" className="flex-1 sm:flex-none bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/20">
             <Link href="/gerar-video"><Film className="h-4 w-4" /> Novo vídeo</Link>
           </Button>
         </div>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-3">
-        <div className="rounded-xl border border-border bg-card p-4">
-          <div className="flex items-center gap-2 mb-1 text-muted-foreground">
-            <ImageIcon className="h-4 w-4 text-violet-400" />
-            <span className="text-xs">Imagens geradas</span>
+      <div className="grid grid-cols-3 gap-2 sm:gap-3">
+        <div className="rounded-xl border border-border bg-card p-3 sm:p-4">
+          <div className="flex items-center gap-1.5 mb-1 text-muted-foreground">
+            <ImageIcon className="h-3.5 w-3.5 text-violet-400 shrink-0" />
+            <span className="text-[10px] sm:text-xs truncate">Imagens</span>
           </div>
-          <p className="text-2xl font-bold text-violet-400">{totalImagens}</p>
+          <p className="text-xl sm:text-2xl font-bold text-violet-400">{totalImagens}</p>
         </div>
-        <div className="rounded-xl border border-border bg-card p-4">
-          <div className="flex items-center gap-2 mb-1 text-muted-foreground">
-            <Film className="h-4 w-4 text-cyan-400" />
-            <span className="text-xs">Vídeos gerados</span>
+        <div className="rounded-xl border border-border bg-card p-3 sm:p-4">
+          <div className="flex items-center gap-1.5 mb-1 text-muted-foreground">
+            <Film className="h-3.5 w-3.5 text-cyan-400 shrink-0" />
+            <span className="text-[10px] sm:text-xs truncate">Vídeos</span>
           </div>
-          <p className="text-2xl font-bold text-cyan-400">{totalVideos}</p>
+          <p className="text-xl sm:text-2xl font-bold text-cyan-400">{totalVideos}</p>
         </div>
-        <div className="rounded-xl border border-border bg-card p-4">
-          <div className="flex items-center gap-2 mb-1 text-muted-foreground">
-            <Coins className="h-4 w-4 text-yellow-400" />
-            <span className="text-xs">Créditos usados</span>
+        <div className="rounded-xl border border-border bg-card p-3 sm:p-4">
+          <div className="flex items-center gap-1.5 mb-1 text-muted-foreground">
+            <Coins className="h-3.5 w-3.5 text-yellow-400 shrink-0" />
+            <span className="text-[10px] sm:text-xs truncate">Créditos</span>
           </div>
-          <p className="text-2xl font-bold text-yellow-400">{totalCreditos}</p>
+          <p className="text-xl sm:text-2xl font-bold text-yellow-400">{totalCreditos}</p>
         </div>
       </div>
 
@@ -115,10 +115,10 @@ export default async function HistoricoPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm truncate">{g.estilo}</p>
-                    <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-muted-foreground mt-0.5">
                       <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />{formatDate(g.created_at)}</span>
-                      <span className="flex items-center gap-1"><Coins className="h-3 w-3" />{g.creditos_usados} créditos</span>
-                      {!isVideo && <span>{g.quantidade} variações</span>}
+                      <span className="flex items-center gap-1"><Coins className="h-3 w-3" />{g.creditos_usados} cr.</span>
+                      {!isVideo && <span>{g.quantidade} var.</span>}
                     </div>
                   </div>
                   <StatusBadge status={g.status} />
