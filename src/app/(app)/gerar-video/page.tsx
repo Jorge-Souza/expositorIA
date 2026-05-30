@@ -292,7 +292,10 @@ export default function GerarVideoPage() {
   return (
     <div className="pb-24 space-y-8 max-w-2xl">
       <div>
-        <h1 className="text-2xl font-bold">Gerar Vídeo com IA</h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl font-bold">Gerar Vídeo com IA</h1>
+          <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-yellow-500/15 text-yellow-400 border border-yellow-500/30">Beta</span>
+        </div>
         <p className="text-muted-foreground text-sm mt-1">Foto do produto + estilo + movimento = vídeo profissional</p>
       </div>
 
@@ -440,15 +443,23 @@ export default function GerarVideoPage() {
         </div>
       </section>
 
+      {/* Aviso sem som */}
+      <div className="rounded-xl border border-yellow-500/30 bg-yellow-500/5 px-4 py-3 flex items-start gap-3">
+        <span className="text-yellow-400 text-lg shrink-0">🔇</span>
+        <div className="text-sm text-yellow-200/80">
+          <span className="font-semibold text-yellow-400">Atenção:</span> os vídeos gerados não possuem som nem narração. A duração máxima é de <span className="font-semibold text-yellow-400">{state.duracao} segundos</span>.
+        </div>
+      </div>
+
       {/* Bottom bar fixo */}
-      <div className="fixed bottom-0 left-60 right-0 border-t border-border bg-card/95 backdrop-blur px-6 py-3 flex items-center justify-between gap-4">
-        <p className="text-sm text-muted-foreground">
-          <span className="text-foreground font-semibold">{CREDITOS_POR_VIDEO} créditos</span> por vídeo
+      <div className="fixed bottom-16 md:bottom-0 left-0 md:left-60 right-0 border-t border-border bg-card/95 backdrop-blur px-4 md:px-6 py-3 flex items-center justify-between gap-3">
+        <p className="text-sm text-muted-foreground shrink-0">
+          <span className="text-foreground font-semibold">{CREDITOS_POR_VIDEO} cr.</span> por vídeo
         </p>
-        <Button variant="gradient" size="lg" disabled={!canGerar || loading} onClick={handleGerar}>
+        <Button variant="gradient" size="lg" disabled={!canGerar || loading} onClick={handleGerar} className="shrink-0">
           {loading
             ? <><Loader2 className="h-4 w-4 animate-spin" /> Gerando...</>
-            : <><Video className="h-4 w-4" /> Gerar vídeo · {CREDITOS_POR_VIDEO} créditos</>}
+            : <><Video className="h-4 w-4" /> Gerar vídeo</>}
         </Button>
       </div>
     </div>

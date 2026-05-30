@@ -9,9 +9,10 @@ import { toast } from "sonner"
 
 const navItems = [
   { href: "/dashboard", label: "Início", icon: LayoutDashboard },
-  { href: "/gerar", label: "Gerar", icon: Sparkles },
-  { href: "/historico", label: "Histórico", icon: History },
-  { href: "/creditos", label: "Créditos", icon: Coins },
+  { href: "/gerar", label: "Gerar", icon: Sparkles, beta: false },
+  { href: "/gerar-video", label: "Vídeos", icon: Video, beta: true },
+  { href: "/historico", label: "Histórico", icon: History, beta: false },
+  { href: "/creditos", label: "Créditos", icon: Coins, beta: false },
 ]
 
 const ADMIN_EMAIL = "jorge.expdigital@gmail.com"
@@ -34,10 +35,7 @@ export function Sidebar({ credits, nomeUsuario, email }: SidebarProps) {
     toast.success("Até logo!")
   }
 
-  const allNavItems = [
-    ...navItems,
-    ...(isAdmin ? [{ href: "/gerar-video", label: "Vídeos", icon: Video }] : []),
-  ]
+  const allNavItems = navItems
 
   return (
     <>
@@ -50,7 +48,7 @@ export function Sidebar({ credits, nomeUsuario, email }: SidebarProps) {
 
         {/* Nav */}
         <nav className="flex-1 p-3 space-y-0.5">
-          {navItems.map(({ href, label, icon: Icon }) => (
+          {navItems.map(({ href, label, icon: Icon, beta }) => (
             <Link
               key={href}
               href={href}
@@ -63,22 +61,13 @@ export function Sidebar({ credits, nomeUsuario, email }: SidebarProps) {
             >
               <Icon className="h-4 w-4 shrink-0" />
               {label}
+              {beta && (
+                <span className="ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-yellow-500/15 text-yellow-400 border border-yellow-500/30">
+                  Beta
+                </span>
+              )}
             </Link>
           ))}
-          {isAdmin && (
-            <Link
-              href="/gerar-video"
-              className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
-                pathname === "/gerar-video"
-                  ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground hover:text-foreground hover:bg-accent"
-              )}
-            >
-              <Video className="h-4 w-4 shrink-0" />
-              Gerar Vídeos
-            </Link>
-          )}
           {isAdmin && (
             <Link
               href="/admin"
@@ -143,17 +132,22 @@ export function Sidebar({ credits, nomeUsuario, email }: SidebarProps) {
 
       {/* Bottom nav — mobile */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around border-t border-border bg-card pb-safe">
-        {allNavItems.map(({ href, label, icon: Icon }) => (
+        {allNavItems.map(({ href, label, icon: Icon, beta }) => (
           <Link
             key={href}
             href={href}
             className={cn(
-              "flex flex-col items-center gap-0.5 px-3 py-2 text-xs font-medium transition-colors",
+              "relative flex flex-col items-center gap-0.5 px-2 py-2 text-xs font-medium transition-colors",
               pathname === href ? "text-primary" : "text-muted-foreground"
             )}
           >
             <Icon className="h-5 w-5" />
             {label}
+            {beta && (
+              <span className="absolute -top-0.5 -right-0.5 text-[8px] font-bold px-1 rounded-full bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 leading-tight">
+                β
+              </span>
+            )}
           </Link>
         ))}
         {isAdmin && (
