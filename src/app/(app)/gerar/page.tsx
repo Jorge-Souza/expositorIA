@@ -218,7 +218,7 @@ export default function GerarPage() {
   )
 
   return (
-    <div className="pb-24 space-y-8 max-w-2xl">
+    <div className="pb-36 md:pb-24 space-y-8 max-w-2xl">
       <div>
         <h1 className="text-2xl font-bold">Gerar Imagens com IA</h1>
         <p className="text-muted-foreground text-sm mt-1">Configure e gere imagens profissionais do seu produto</p>
@@ -490,7 +490,7 @@ export default function GerarPage() {
       </section>
 
       {/* Bottom bar fixo */}
-      <div className="fixed bottom-0 left-0 md:left-60 right-0 border-t border-border bg-card/95 backdrop-blur px-4 md:px-6 py-3 flex items-center justify-between gap-3">
+      <div className="fixed bottom-16 md:bottom-0 left-0 md:left-60 right-0 border-t border-border bg-card/95 backdrop-blur px-4 md:px-6 py-3 flex items-center justify-between gap-3">
         <div className="flex items-center gap-1.5 text-sm min-w-0">
           <Coins className="h-4 w-4 text-yellow-400 shrink-0" />
           <span className="font-semibold shrink-0">{creditos} cr.</span>
