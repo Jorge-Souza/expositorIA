@@ -5,7 +5,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-3">
-            <img src="/logo-expositorIA.png" alt="expositorIA" className="h-20 w-auto object-contain" />
+            <img src="/logo-expositorIA1.png" alt="expositorIA" className="h-32 w-auto object-contain" />
           </div>
           <p className="text-muted-foreground text-sm">Imagens profissionais para seus produtos</p>
         </div>
