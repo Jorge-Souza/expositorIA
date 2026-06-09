@@ -26,17 +26,27 @@ export default function CadastroPage() {
       return
     }
     setLoading(true)
-    const supabase = createClient()
-    const { error } = await supabase.auth.signUp({
-      email,
-      password: senha,
-      options: { data: { nome } },
+
+    const res = await fetch("/api/auth/cadastro", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password: senha, nome }),
     })
-    if (error) {
-      toast.error(error.message)
+    const data = await res.json()
+    if (!res.ok) {
+      toast.error(data.error || "Erro ao criar conta")
       setLoading(false)
       return
     }
+
+    const supabase = createClient()
+    const { error: loginError } = await supabase.auth.signInWithPassword({ email, password: senha })
+    if (loginError) {
+      toast.error(loginError.message)
+      setLoading(false)
+      return
+    }
+
     toast.success("Conta criada! Você ganhou 5 créditos grátis para começar.")
     router.push("/dashboard")
   }
