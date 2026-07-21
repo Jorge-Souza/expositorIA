@@ -140,7 +140,7 @@ async function generateWithGemini(params: {
   prompt: string
   modelo: string
   referencias?: { mimeType: string; data: string }[]
-}): Promise<Buffer | null> {
+}): Promise<{ buffer: Buffer | null; motivo?: string }> {
   const genai = new GoogleGenAI({ apiKey: GOOGLE_API_KEY })
   const imageBase64 = params.imageBuffer.toString("base64")
 
@@ -166,13 +166,31 @@ async function generateWithGemini(params: {
       config: { responseModalities: ["TEXT", "IMAGE"] },
     })
 
-    const parts = response.candidates?.[0]?.content?.parts ?? []
+    const candidate = response.candidates?.[0]
+    const parts = candidate?.content?.parts ?? []
     for (const part of parts) {
       if (part.inlineData?.data) {
-        return Buffer.from(part.inlineData.data, "base64")
+        return { buffer: Buffer.from(part.inlineData.data, "base64") }
       }
     }
-    return null
+
+    const texto = parts.filter((p) => p.text).map((p) => p.text).join(" ")
+    const blockReason = response.promptFeedback?.blockReason
+    const motivo = blockReason
+      ? `bloqueado: ${blockReason}`
+      : candidate?.finishReason
+        ? `finishReason=${candidate.finishReason}${texto ? ` — ${texto.slice(0, 200)}` : ""}`
+        : (texto.slice(0, 200) || "sem detalhes")
+
+    console.error("[gerar] Gemini não retornou imagem", {
+      modelo: params.modelo,
+      finishReason: candidate?.finishReason,
+      blockReason,
+      safetyRatings: candidate?.safetyRatings,
+      texto,
+    })
+
+    return { buffer: null, motivo }
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
     throw new Error(msg)
@@ -284,7 +302,7 @@ export async function POST(req: NextRequest) {
     for (let i = 0; i < quantidade; i++) {
       const prompt = buildPrompt({ estilo, cenario, iluminacao, angulo, formato, observacoes, variacao: i + 1, total: quantidade })
       try {
-        const imgBuffer = await generateWithGemini({ imageBuffer: buffer, mimeType: imagem.type, prompt, modelo, referencias })
+        const { buffer: imgBuffer, motivo } = await generateWithGemini({ imageBuffer: buffer, mimeType: imagem.type, prompt, modelo, referencias })
 
         if (imgBuffer) {
           const finalBuffer = await resizeToFormat(imgBuffer, formato)
@@ -301,7 +319,7 @@ export async function POST(req: NextRequest) {
             await send({ type: "erro_imagem", index: i, mensagem: saveErr.message })
           }
         } else {
-          await send({ type: "erro_imagem", index: i, mensagem: "Imagem não retornada pela API" })
+          await send({ type: "erro_imagem", index: i, mensagem: motivo ? `Imagem não retornada pela API (${motivo})` : "Imagem não retornada pela API" })
         }
       } catch (err) {
         const mensagem = err instanceof Error ? err.message : String(err)
